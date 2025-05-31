@@ -18,6 +18,8 @@ Wordgen is a professional AI-powered content generation platform that helps user
 - **Admin**: `admin@wordgen.com` | **Password**: `admin123` ⚠️ *Change in production*
 
 ### 📚 Documentation
+- **[Deployment Success Report](./DEPLOYMENT_SUCCESS.md)** - ✅ Complete deployment status and configuration
+- **[API Credentials Guide](./API_CREDENTIALS_GUIDE.md)** - 🔑 Step-by-step setup for all API keys
 - **[Deployment Fixes](./DEPLOYMENT_FIXES.md)** - Complete list of issues resolved
 - **[Technical Architecture](./TECHNICAL_ARCHITECTURE.md)** - System architecture details
 - **[Next Steps](./NEXT_STEPS.md)** - Development roadmap and priorities
