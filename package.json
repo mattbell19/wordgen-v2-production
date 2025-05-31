@@ -28,7 +28,7 @@
     "db:migrate": "node scripts/migrate-database.js --migrate",
     "db:fresh": "node scripts/migrate-database.js --fresh",
     "db:status": "node scripts/migrate-database.js --status",
-    "heroku-postbuild": "npm run build",
+    "heroku-postbuild": "npm run build:server",
     "test:article": "node test-article-api.js"
   },
   "dependencies": {

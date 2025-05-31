@@ -67,7 +67,7 @@ export const queryClient = new QueryClient({
       refetchOnMount: true,
       refetchOnReconnect: true,
       staleTime: 60000, // Consider data fresh for 1 minute
-      cacheTime: 5 * 60 * 1000, // Cache for 5 minutes
+      cacheTime: 5 * 60 * 1000, // Cache for 5 minutes (v4 syntax)
       suspense: false,
       networkMode: 'always',
       structuralSharing: true
