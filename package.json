@@ -138,7 +138,8 @@
     "wouter": "^3.7.1",
     "ws": "^8.18.0",
     "zod": "^3.24.1",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "cross-env": "^7.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
@@ -167,7 +168,6 @@
     "autoprefixer": "^10.4.20",
     "babel-jest": "^29.7.0",
     "concurrently": "^9.1.2",
-    "cross-env": "^7.0.3",
     "drizzle-kit": "^0.31.0",
     "esbuild": "^0.25.3",
     "identity-obj-proxy": "^3.0.0",
