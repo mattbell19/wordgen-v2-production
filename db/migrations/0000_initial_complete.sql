@@ -36,11 +36,10 @@ CREATE TABLE IF NOT EXISTS "users" (
   "updated_at" TIMESTAMP DEFAULT NOW()
 );
 
--- Create indexes for users table
+-- Create indexes for users table (except active_team_id which will be created after teams table)
 CREATE UNIQUE INDEX IF NOT EXISTS "users_email_idx" ON "users" ("email");
 CREATE INDEX IF NOT EXISTS "users_status_idx" ON "users" ("status");
 CREATE INDEX IF NOT EXISTS "users_subscription_tier_idx" ON "users" ("subscription_tier");
-CREATE INDEX IF NOT EXISTS "users_active_team_idx" ON "users" ("active_team_id");
 
 -- User usage tracking table
 CREATE TABLE IF NOT EXISTS "user_usage" (
@@ -86,8 +85,11 @@ CREATE TABLE IF NOT EXISTS "teams" (
 );
 
 -- Add foreign key constraint for active_team_id after teams table is created
-ALTER TABLE "users" ADD CONSTRAINT "users_active_team_id_fkey" 
+ALTER TABLE "users" ADD CONSTRAINT "users_active_team_id_fkey"
   FOREIGN KEY ("active_team_id") REFERENCES "teams"("id") ON DELETE SET NULL;
+
+-- Create index for active_team_id after foreign key constraint is added
+CREATE INDEX IF NOT EXISTS "users_active_team_idx" ON "users" ("active_team_id");
 
 -- Team roles table
 CREATE TABLE IF NOT EXISTS "team_roles" (
