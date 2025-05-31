@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { KeywordResearchResult } from "@/lib/types";
 import { db } from '../db';
-import { keywords } from '../../db/schema';
+import { savedKeywords } from '../../db/schema';
 import type { InferModel } from 'drizzle-orm';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
