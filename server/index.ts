@@ -308,11 +308,7 @@ app.get('/api/gsc/callback', async (req, res) => {
   }
 });
 
-// Serve static files in production before API routes
-if (process.env.NODE_ENV === 'production') {
-  console.log('[SERVER] Setting up static file serving for production');
-  serveStatic(app);
-}
+// Note: Static file serving moved to after API routes to prevent conflicts
 
 // Add debug routes before API routes
 app.get('/api/debug/proxy-test', (req, res) => {
@@ -343,6 +339,12 @@ app.post('/api/debug/echo', express.json(), (req, res) => {
 // Register API routes
 const httpServer = registerRoutes(app);
 
+// Serve static files in production AFTER API routes
+if (process.env.NODE_ENV === 'production') {
+  console.log('[SERVER] Setting up static file serving for production');
+  serveStatic(app);
+}
+
 // Add WebSocket upgrade handling
 httpServer.on('upgrade', (request, socket, head) => {
   console.log('[WS] Upgrade request received:', {
@@ -351,29 +353,7 @@ httpServer.on('upgrade', (request, socket, head) => {
   });
 });
 
-// Catch-all route for SPA in production
-if (process.env.NODE_ENV === 'production') {
-  // Make sure this is registered AFTER all API routes
-  app.get('*', (req, res, next) => {
-    // Skip API routes, let them be handled by their own handlers
-    if (req.path.startsWith('/api/')) {
-      console.log(`[SPA] Skipping API route: ${req.path}`);
-      return next();
-    }
-
-    // Skip health check endpoint
-    if (req.path === '/health' || req.path === '/api/health') {
-      return next();
-    }
-
-    // Log the route being accessed for debugging
-    if (process.env.DEBUG_LEVEL === 'verbose') {
-      console.log(`[SPA] Serving index.html for route: ${req.originalUrl}`);
-    }
-
-    res.sendFile(path.resolve(__dirname, '../dist/public/index.html'));
-  });
-}
+// Note: Catch-all route for SPA is now handled by serveStatic function
 
 // Add standardized error handling middleware
 app.use(errorHandler);
