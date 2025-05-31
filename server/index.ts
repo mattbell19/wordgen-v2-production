@@ -223,8 +223,7 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// Setup authentication
-setupAuth(app);
+// Note: Authentication setup is handled in registerRoutes() function
 
 // Initialize application services
 initializeServices();
@@ -375,17 +374,29 @@ if (process.env.NODE_ENV === 'production') {
 // Add standardized error handling middleware
 app.use(errorHandler);
 
-// Create HTTP server instance
-const server = app.listen(config.port, () => {
-  console.log(`[Server] Server is running on port ${config.port}`);
+// Health check endpoint
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    version: process.env.npm_package_version || '1.0.0'
+  });
+});
+
+// Start the HTTP server
+const PORT = process.env.PORT || config.port;
+httpServer.listen(PORT, () => {
+  console.log(`[Server] Server is running on port ${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
 });
 
 // Graceful shutdown handler
 const gracefulShutdown = async (signal: string) => {
   console.log(`\n${signal} signal received: shutting down server`);
-  
+
   // First close the server to stop accepting new connections
-  server.close(() => {
+  httpServer.close(() => {
     console.log('Server closed');
   });
 
@@ -394,7 +405,7 @@ const gracefulShutdown = async (signal: string) => {
     console.log('Cleaning up application resources...');
     await cleanupServices();
     console.log('Application resources cleaned up successfully.');
-    
+
     // Exit process
     process.exit(0);
   } catch (error) {
@@ -416,35 +427,3 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Export for testing
 export default app;
-
-app.get('/api/health', (_req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    version: process.env.npm_package_version || '1.0.0'
-  });
-});
-
-// Security middleware
-app.use(helmet());
-app.use(cors());
-app.use(compression());
-
-// Rate limiting
-app.use(rateLimiter);
-
-// API routes
-app.use('/api', apiRouter);
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/seo', seoRouter);
-
-// Error handling
-app.use(errorHandler);
-
-// Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`);
-});
