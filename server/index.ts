@@ -11,7 +11,7 @@ import crypto from 'crypto';
 import { initializeServices, scheduleCleanupTasks, cleanupServices } from './startup';
 import { errorHandler, setupGlobalErrorHandlers } from './lib/error-handler';
 import { apiRateLimiter } from './middleware/authMiddleware';
-import testDirectRoute from './test-route';
+
 import gscAuthDirectRoute from './gsc-auth-direct';
 import { gscService } from './services/gsc.service';
 import helmet from 'helmet';
@@ -29,8 +29,7 @@ setupGlobalErrorHandlers();
 const app = express();
 app.set('trust proxy', true);
 
-// Register test direct route
-app.use('/api', testDirectRoute);
+
 
 // Health check endpoint is defined at the end of the file
 

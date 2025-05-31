@@ -8,7 +8,7 @@ import {
   teamUsageLimits,
   subscriptions,
   users,
-} from '../db/schema';
+} from '../../db/schema';
 import { stripe, isDevelopment } from './stripe.service';
 
 // Team subscription plans

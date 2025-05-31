@@ -2,7 +2,7 @@ import { router, protectedProcedure } from '../trpc';
 import { z } from 'zod';
 import { stripeService } from '../services/stripe.service';
 import { db } from '../db';
-import { subscriptions, users, subscriptionPlans } from '../db/schema';
+import { subscriptions, users, subscriptionPlans } from '../../db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import Stripe from 'stripe';

@@ -3,7 +3,7 @@ import pLimit from 'p-limit';
 import { eq, and, sql } from 'drizzle-orm';
 import { db, type ArticleQueue } from '../db';
 import { articleQueues, articleQueueItems } from '../db/queue-schema';
-import { articles, projects } from '../db/schema';
+import { articles, projects } from '../../db/schema';
 import { ArticleService } from './article.service';
 import type { ArticleSettings } from '@/lib/types';
 import type { ArticleServiceResponse } from './article.service';
