@@ -177,7 +177,11 @@ app.use((req, res, next) => {
 // Configure CORS
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://wordgen.io', 'https://www.wordgen.io']
+    ? [
+        'https://wordgen.io',
+        'https://www.wordgen.io',
+        'https://wordgen-v2-production-15d78da87625.herokuapp.com' // Add Heroku domain
+      ]
     : ['http://localhost:4002', 'http://127.0.0.1:4002'], // Allow both localhost and 127.0.0.1
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Upgrade', 'Connection', 'Cookie'],
