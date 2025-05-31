@@ -1,0 +1,16 @@
+{
+  "name": "article-writer-testing-tools",
+  "version": "1.0.0",
+  "description": "Testing tools for the Article Writer feature",
+  "main": "test-article-generation.js",
+  "scripts": {
+    "test": "node test-article-generation.js",
+    "analyze": "node analyze-visual-elements.js"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7",
+    "cheerio": "^1.0.0-rc.12"
+  },
+  "author": "",
+  "license": "ISC"
+}

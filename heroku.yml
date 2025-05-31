@@ -1,0 +1,20 @@
+build:
+  languages:
+    - nodejs
+  packages:
+    - postgresql-client
+setup:
+  addons:
+    - plan: heroku-postgresql:essential-0
+      as: DATABASE
+  config:
+    NODE_ENV: production
+    NPM_CONFIG_PRODUCTION: false
+release:
+  image: web
+  command:
+    - npm run db:migrate
+web:
+  image: web
+  command:
+    - npm start

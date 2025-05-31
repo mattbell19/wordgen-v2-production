@@ -1,0 +1,304 @@
+# Instructions
+
+During your interaction with the user, if you find anything reusable in this project (e.g. version of a library, model name), especially about a fix to a mistake you made or a correction you received, you should take note in the `Lessons` section in the `.cursorrules` file so you will not make the same mistake again. 
+
+You should also use the `.cursorrules` file as a Scratchpad to organize your thoughts. Especially when you receive a new task, you should first review the content of the Scratchpad, clear old different task if necessary, first explain the task, and plan the steps you need to take to complete the task. You can use todo markers to indicate the progress, e.g.
+[X] Task 1
+[ ] Task 2
+
+Also update the progress of the task in the Scratchpad when you finish a subtask.
+Especially when you finished a milestone, it will help to improve your depth of task accomplishment to use the Scratchpad to reflect and plan.
+The goal is to help you maintain a big picture as well as the progress of the task. Always refer to the Scratchpad when you plan the next step.
+
+
+# Lessons
+
+## User Specified Lessons
+
+- For all new features, implement unit tests using the following guidelines:
+  1. Create test files alongside implementation files with a .test.ts or .test.tsx extension
+  2. Test both success and error scenarios for each function or component
+  3. Use proper mocking for external dependencies (APIs, services, etc.)
+  4. Aim for at least 80% code coverage for new features
+  5. Run tests before submitting PRs to ensure no regressions
+
+## Cursor learned
+
+- When encountering Vite module resolution errors with @tanstack/react-query, try:
+  1. Using a specific older version (4.29.19) for better compatibility
+  2. Installing peer dependencies (@tanstack/query-core)
+  3. Adding explicit module resolution in vite.config.ts for both packages
+  4. Including the packages in Vite's optimizeDeps configuration
+
+- For proper static asset handling in Vite + React:
+  1. Import assets directly in components using `import assetName from "@/assets/filename"`
+  2. Use the imported asset variable in src attributes: `src={assetName}`
+  3. Ensure proper path aliases are configured in vite.config.ts
+  4. Use relative paths from src directory with @/ prefix
+
+- Authentication flow best practices:
+  1. Ensure proper session regeneration after registration
+  2. Handle user data consistently in React Query cache
+  3. Add sufficient delay after auth operations to allow cache updates
+  4. Match client-side types with server response structures
+  5. Use proper error handling for auth-related operations
+  6. Use consistent query keys between related hooks
+  7. Disable unnecessary refetching during authentication operations
+  8. Prevent redirect loops by carefully checking current path
+
+- Unit testing best practices with Jest:
+  1. Setup Jest with appropriate configuration for both server and client code
+  2. Transform TypeScript with ts-jest for server code and babel-jest for React components
+  3. Mock external services and APIs for consistent test behavior
+  4. Use descriptive test names that explain what is being tested
+  5. Organize tests by feature or service for better maintainability
+  6. Use the appropriate path aliases in import statements
+  7. Configure transformIgnorePatterns to handle node_modules dependencies
+  8. For React components, use react-testing-library to test behavior not implementation
+  9. Create separate test files mirroring the structure of the implementation files
+
+- When testing external API integrations, consider the following strategies:
+  1. Use dependency injection for the API client to facilitate mocking
+  2. Create clear interfaces for API request/response types
+  3. Implement proper error handling with specific error classes
+  4. Use retries with exponential backoff for reliability
+  5. For third-party libraries with ESM/CommonJS compatibility issues, use mock modules instead of real ones
+  6. Create separate test environment configuration with test API credentials
+
+- For background task processing systems, consider these essential features:
+  1. Use queues with prioritization for better resource allocation
+  2. Implement status monitoring with appropriate update intervals
+  3. Create automatic cleanup processes to prevent resource leaks
+  4. Add configurable retry mechanisms with exponential backoff
+  5. Implement proper shutdown procedures for cleanup during application restart
+  6. Use singleton pattern for services that need application-wide state
+  7. Add user-based access control for multi-tenant systems
+
+- When handling ESM/CommonJS compatibility issues in Jest tests:
+  1. Create specific mock files in a __mocks__ directory adjacent to the module being mocked
+  2. Use CommonJS module.exports format for mocks to ensure compatibility with Jest
+  3. Properly type mock implementations to avoid TypeScript errors
+  4. Use jest.setTimeout() for tests that involve async operations with retry mechanisms
+  5. For modules that use ESM (like node-fetch v3), create manual CommonJS-compatible mocks
+  6. Skip direct testing of methods that require actual API credentials when not critical
+  7. Focus testing on API method arguments and response handling vs. networking details
+  8. Ensure tests are consistent with implementation (e.g., endpoint paths should match)
+
+- When working with TypeScript arithmetic operations and type checking:
+  1. Use explicit type annotations for variables used in arithmetic operations
+  2. Cast values to numbers with Number() when working with values from filters or object methods
+  3. Use Math.floor() or similar functions instead of direct division for cleaner type handling
+  4. For complex operations, break them into intermediate variables with explicit types
+  5. When dealing with array-derived values, ensure to handle empty array cases
+  6. Prevent TypeScript errors by using optional chaining before arithmetic operations
+
+- For integrating third-party APIs like DataForSEO:
+  1. Create a complete client abstraction layer with proper TypeScript interfaces
+  2. Implement all endpoint methods in the client class for consistency
+  3. Create data models that match the API response structure for better type safety
+  4. Add explicit error handling for different error scenarios (network, API, validation)
+  5. Include proper typing for request parameters to catch errors at compile time
+  6. Implement separate service layers that consume the client for business logic
+  7. Use proper interface segregation to avoid conflicts with type declarations
+  8. Add comprehensive test coverage for the client and service layers
+
+- When using node-fetch in a CommonJS environment:
+  1. Use node-fetch v2.x (e.g. 2.6.9) for CommonJS compatibility
+  2. Install matching @types/node-fetch version
+  3. Use require() instead of import
+  4. For testing, mock node-fetch using jest.mock()
+  5. Consider using axios as an alternative for better CommonJS/ESM compatibility
+
+# Scratchpad
+
+## Current Task: Fix SEO Audit System Issues
+
+### Issues Fixed:
+[X] Added missing methods to DataForSEOClient class (getOnPageNonIndexable, getOnPageSecurity)
+[X] Fixed interface conflicts in report-generator.service.ts
+[X] Added proper type declarations for SeoAuditOptions
+[X] Added tests for new API client methods
+[X] Added proper error handling for API responses
+[X] Updated .cursorrules with lessons learned about TypeScript arithmetic and API integration
+[X] Fixed arithmetic operations in mobile optimization score calculation
+[X] Added unit tests for the report generator service
+[X] Created proper type declarations for API response data
+[X] Improved type safety with strongly-typed API responses
+[X] Implemented graceful fallbacks for error cases with the error-handler module
+[X] Implemented a caching layer for frequently accessed data
+[X] Created documentation for the SEO Audit System
+
+### Remaining Issues:
+[ ] Fix any remaining TypeScript linter errors in cache-manager.ts
+[ ] Add additional test coverage for edge cases
+
+### Changes Made:
+1. Added getOnPageNonIndexable and getOnPageSecurity methods to DataForSEOClient
+2. Added SeoAuditOptions interface to properly type method parameters
+3. Fixed duplicate interface declarations in report-generator.service.ts
+4. Added test for getOnPageSecurity method
+5. Fixed options parameter type in createAuditTask method
+6. Improved type safety in getTopIssues method with array type annotations
+7. Cleaned up import statements to avoid name conflicts
+8. Rewritten mobile optimization score calculation to avoid arithmetic type errors
+9. Created comprehensive unit tests for ReportGeneratorService
+10. Created api-responses.ts with strongly-typed interfaces for all API responses
+11. Updated client.ts to use the new type definitions
+12. Created a robust error-handler module with:
+    - Custom error classes for different error scenarios
+    - Default fallback values for different data types
+    - Safe data access utilities to prevent runtime errors
+    - Retry mechanism with exponential backoff for transient failures
+13. Added a cache manager to reduce API calls:
+    - In-memory LRU cache with configurable max size
+    - TTL (Time-To-Live) for cached items
+    - Eviction of least recently used items when cache is full
+    - Cache statistics tracking and logging
+    - Automatic cleanup of expired items
+14. Implemented unit tests for the cache manager
+15. Created comprehensive README.md with documentation:
+    - Architecture overview and component descriptions
+    - Usage examples for key features
+    - Configuration options
+    - Error handling patterns
+    - Caching strategies
+
+## Current Task: Implement SEO Audit System
+
+### Phase 1: DataForSEO Integration (COMPLETED)
+[X] Create DataForSEO API client with proper authentication
+[X] Implement error handling and rate limiting
+[X] Define response types for all API methods
+[X] Create service layer for SEO audit functionality
+[X] Add API endpoints for SEO audit tasks
+[X] Fix unit tests for DataForSEO integration
+
+### Phase 2: Task Management (COMPLETED)
+[X] Implement task queuing system
+[X] Add task status monitoring
+[X] Create task cleanup system
+[X] Implement retry mechanism
+[X] Add user-based task access control
+[X] Implement graceful shutdown handling
+
+### Phase 3: Reporting System (TO DO)
+[ ] Create comprehensive report schema
+[ ] Implement PDF export
+[ ] Add historical comparison
+[ ] Create visualization components
+
+## Lessons
+
+## User Specified Lessons
+
+- For all new features, implement unit tests using the following guidelines:
+  1. Create test files alongside implementation files with a .test.ts or .test.tsx extension
+  2. Test both success and error scenarios for each function or component
+  3. Use proper mocking for external dependencies (APIs, services, etc.)
+  4. Aim for at least 80% code coverage for new features
+  5. Run tests before submitting PRs to ensure no regressions
+
+## Cursor learned
+
+- When testing external API integrations, consider the following strategies:
+  1. Use dependency injection for the API client to facilitate mocking
+  2. Create clear interfaces for API request/response types
+  3. Implement proper error handling with specific error classes
+  4. Use retries with exponential backoff for reliability
+  5. For third-party libraries with ESM/CommonJS compatibility issues, use mock modules instead of real ones
+  6. Create separate test environment configuration with test API credentials
+
+- For background task processing systems, consider these essential features:
+  1. Use queues with prioritization for better resource allocation
+  2. Implement status monitoring with appropriate update intervals
+  3. Create automatic cleanup processes to prevent resource leaks
+  4. Add configurable retry mechanisms with exponential backoff
+  5. Implement proper shutdown procedures for cleanup during application restart
+  6. Use singleton pattern for services that need application-wide state
+  7. Add user-based access control for multi-tenant systems
+
+- When handling ESM/CommonJS compatibility issues in Jest tests:
+  1. Create specific mock files in a __mocks__ directory adjacent to the module being mocked
+  2. Use CommonJS module.exports format for mocks to ensure compatibility with Jest
+  3. Properly type mock implementations to avoid TypeScript errors
+  4. Use jest.setTimeout() for tests that involve async operations with retry mechanisms
+  5. For modules that use ESM (like node-fetch v3), create manual CommonJS-compatible mocks
+  6. Skip direct testing of methods that require actual API credentials when not critical
+  7. Focus testing on API method arguments and response handling vs. networking details
+  8. Ensure tests are consistent with implementation (e.g., endpoint paths should match)
+
+## Current Task: Improve User Profile Management
+
+### Phase 1: Fix Authentication Flow Issues (COMPLETED)
+[X] Update useUser hook to use same query key as useAuth
+[X] Update useUser hook to handle response format consistently
+[X] Modify useAuth to prevent unnecessary redirects
+[X] Update dashboard to use the useAuth hook directly
+[X] Create CHANGELOG.md entry documenting the fixes
+[X] Update .cursorrules with lessons learned
+
+### Phase 2: Enhance Dashboard Experience (COMPLETED)
+[X] Add additional user statistics to dashboard
+[X] Improve dashboard layout and responsiveness
+[X] Add visual indicators for account status
+[X] Create quick-action buttons for common tasks
+[X] Implement recent activity feed
+[X] Add improved empty states with action buttons
+[X] Update CHANGELOG.md with dashboard enhancements
+
+### Phase 3: Enhance Error Handling (COMPLETED)
+[X] Review current error handling patterns
+[X] Create reusable error handling components
+[X] Implement consistent error boundary pattern
+[X] Add retry mechanisms for failed API requests
+[X] Improve error messages and user guidance
+[X] Add comprehensive logging components
+[X] Update CHANGELOG.md with error handling improvements
+
+### Changes Made in Phase 1:
+1. Unified query keys between useAuth and useUser
+2. Fixed response format handling
+3. Prevented unnecessary redirects during auth flow
+4. Made the dashboard component use the same useAuth hook
+5. Disabled unnecessary query refetching that was causing race conditions
+6. Added proper error handling in the authentication flow
+
+### Changes Made in Phase 2:
+1. Added quick action buttons for common tasks
+2. Added account status indicators with visual badges
+3. Created account overview card with credit usage
+4. Added recent activity feed showing user actions
+5. Improved layout with responsive design
+6. Enhanced empty states with helper buttons
+7. Truncated long article titles for better display
+
+### Changes Made in Phase 3:
+1. Created reusable ErrorDisplay component with different error variants
+2. Added ErrorBoundary component for catching React component errors
+3. Implemented useApi hook with automatic retry capabilities
+4. Created specialized error components for common error types
+5. Enhanced dashboard with improved error handling
+6. Added comprehensive documentation in the CHANGELOG.md
+
+## Current Task: Production Deployment Workflow
+
+### Deployment Rules:
+[X] Project is now live in production
+[X] All changes must be pushed directly to main branch
+[X] Each push to main triggers automatic deployment
+[X] Extra care needed for changes as they go straight to production
+
+### Recent Changes Made:
+[X] Fixed Node.js version issues
+[X] Resolved Rollup dependency conflicts
+[X] Updated build configuration
+[X] Configured proper npm settings
+[X] Enhanced user profile management
+[X] Improved error handling system
+[X] Consolidated user routes
+[X] Pushed changes to main branch
+
+### Next Steps:
+[ ] Monitor production logs for any issues
+[ ] Plan future features and improvements
+[ ] Consider adding automated tests before deployment

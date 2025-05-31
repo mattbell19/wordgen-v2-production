@@ -1,0 +1,46 @@
+@font-face {
+  font-family: 'Sora-ExtraBold';
+  src: url('../assets/Sora-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Sora-Medium';
+  src: url('../assets/Sora-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Literata-Light';
+  src: url('../assets/Literata-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Sora-Bold';
+  src: url('../assets/Sora-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Inter-Regular';
+  src: url('../assets/Inter_28pt-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.font-sora-bold {
+  font-family: 'Sora-Bold', sans-serif;
+}
+
+.font-inter-regular {
+  font-family: 'Inter-Regular', sans-serif;
+}
+
+.font-sora-medium {
+  font-family: 'Sora-Medium', sans-serif;
+} 
