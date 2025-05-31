@@ -122,11 +122,18 @@ async function runMigration(filename) {
  */
 async function runFreshSetup() {
   console.log('🚀 Running fresh database setup...');
-  
+
   try {
+    // Drop all tables and recreate schema
+    console.log('🗑️  Dropping all existing tables...');
+    await pool.query('DROP SCHEMA public CASCADE');
+    await pool.query('CREATE SCHEMA public');
+    await pool.query('GRANT ALL ON SCHEMA public TO postgres');
+    await pool.query('GRANT ALL ON SCHEMA public TO public');
+
     // Create migrations table
     await createMigrationsTable();
-    
+
     // Run all available migrations in order
     const availableMigrations = getMigrationFiles();
     for (const migration of availableMigrations) {
