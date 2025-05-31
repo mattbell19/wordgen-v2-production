@@ -1,6 +1,26 @@
-# Wordgen
+# WordGen v2 🚀
 
 Wordgen is a professional AI-powered content generation platform that helps users create high-quality articles, research keywords, and manage their content efficiently.
+
+**🌐 Live Application**: https://wordgen-v2-production-15d78da87625.herokuapp.com/
+
+## 🎉 Deployment Status
+
+✅ **Successfully Deployed & Functional on Heroku**
+- Authentication system working (registration, login, sessions)
+- Database schema complete with all required tables
+- API endpoints returning proper JSON responses
+- Client application building and serving correctly
+- All major dependency conflicts resolved
+
+### Test Credentials
+- **Email**: `test@example.com` | **Password**: `password123`
+- **Admin**: `admin@wordgen.com` | **Password**: `admin123` ⚠️ *Change in production*
+
+### 📚 Documentation
+- **[Deployment Fixes](./DEPLOYMENT_FIXES.md)** - Complete list of issues resolved
+- **[Technical Architecture](./TECHNICAL_ARCHITECTURE.md)** - System architecture details
+- **[Next Steps](./NEXT_STEPS.md)** - Development roadmap and priorities
 
 ## Features
 
