@@ -3,6 +3,8 @@ import { IVerifyOptions, Strategy as LocalStrategy } from "passport-local";
 import { type Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import RedisStore from "connect-redis";
+import { createClient } from "redis";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { users, insertUserSchema, type SelectUser } from "@db/schema";
@@ -40,7 +42,66 @@ declare global {
   }
 }
 
-export function setupAuth(app: Express) {
+// Initialize Redis client for session store
+let redisClient: any = null;
+let sessionStore: any = null;
+
+async function initializeSessionStore() {
+  const redisUrl = process.env.REDIS_URL || process.env.REDIS_TLS_URL;
+
+  if (redisUrl) {
+    try {
+      console.log('[Auth] Initializing Redis session store...');
+      redisClient = createClient({
+        url: redisUrl,
+        socket: {
+          tls: redisUrl.includes('rediss://'),
+          rejectUnauthorized: false
+        }
+      });
+
+      redisClient.on('error', (err: any) => {
+        console.error('[Auth] Redis client error:', err);
+      });
+
+      redisClient.on('connect', () => {
+        console.log('[Auth] Redis client connected successfully');
+      });
+
+      redisClient.on('ready', () => {
+        console.log('[Auth] Redis client ready');
+      });
+
+      await redisClient.connect();
+      sessionStore = new RedisStore({
+        client: redisClient,
+        prefix: 'wordgen:sess:',
+        ttl: 7 * 24 * 60 * 60 // 7 days in seconds
+      });
+      console.log('[Auth] Redis session store initialized successfully');
+    } catch (error) {
+      console.error('[Auth] Failed to initialize Redis session store:', error);
+      console.log('[Auth] Falling back to MemoryStore');
+      sessionStore = new MemoryStore({
+        checkPeriod: 86400000, // 24 hours
+        stale: false,
+        ttl: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+    }
+  } else {
+    console.log('[Auth] No Redis URL found, using MemoryStore');
+    sessionStore = new MemoryStore({
+      checkPeriod: 86400000, // 24 hours
+      stale: false,
+      ttl: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+  }
+}
+
+export async function setupAuth(app: Express) {
+  // Initialize session store first
+  await initializeSessionStore();
+
   // Get session secret from environment variables with fallback
   const sessionSecret = process.env.SESSION_SECRET || process.env.JWT_SECRET || "development-secret";
   if (process.env.NODE_ENV === 'production' && sessionSecret === 'development-secret') {
@@ -51,17 +112,13 @@ export function setupAuth(app: Express) {
 
   // Configure CORS for the session
   const corsOrigin = isDev ? ['http://localhost:4002'] : ['https://wordgen.io'];
-  
+
   const sessionSettings: session.SessionOptions = {
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     name: 'sessionId',
-    store: new MemoryStore({
-      checkPeriod: 86400000, // 24 hours
-      stale: false, // Don't allow stale sessions
-      ttl: 7 * 24 * 60 * 60 * 1000 // 7 days
-    }),
+    store: sessionStore,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
@@ -74,8 +131,9 @@ export function setupAuth(app: Express) {
   };
 
   // Log session configuration for debugging
+  const storeType = redisClient ? 'RedisStore' : 'MemoryStore';
   console.log('[Auth] Session configuration:', {
-    store: sessionSettings.store ? 'MemoryStore' : 'None',
+    store: storeType,
     cookieSecure: sessionSettings.cookie?.secure,
     cookieSameSite: sessionSettings.cookie?.sameSite,
     cookieMaxAge: sessionSettings.cookie?.maxAge,
@@ -589,3 +647,16 @@ export const requireAuth = (
     return ApiResponse.error(res, 500, 'Internal server error', 'INTERNAL_SERVER_ERROR');
   }
 };
+
+// Export cleanup function for graceful shutdown
+export async function cleanupAuth(): Promise<void> {
+  if (redisClient) {
+    try {
+      console.log('[Auth] Closing Redis connection...');
+      await redisClient.quit();
+      console.log('[Auth] Redis connection closed successfully');
+    } catch (error) {
+      console.error('[Auth] Error closing Redis connection:', error);
+    }
+  }
+}

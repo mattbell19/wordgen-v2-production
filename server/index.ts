@@ -2,7 +2,7 @@ import 'dotenv/config'
 import express from "express";
 import cors from 'cors';
 import morgan from 'morgan';
-import { setupAuth } from './auth'
+import { setupAuth, cleanupAuth } from './auth'
 import { registerRoutes } from './routes'
 import config from './config'
 import { serveStatic } from './static'
@@ -22,6 +22,7 @@ import { userRoutes } from './routes/user';
 import seoRouter from './routes/seo';
 import rateLimiter from './lib/rate-limiter';
 import { logger } from './lib/logger';
+import { logEnvironmentStatus } from './lib/env-validator';
 
 // Setup global unhandled error catchers
 setupGlobalErrorHandlers();
@@ -229,12 +230,16 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Note: Authentication setup is handled in registerRoutes() function
 
-// Initialize application services
-initializeServices();
-scheduleCleanupTasks();
+async function startServer() {
+  // Validate environment configuration
+  logEnvironmentStatus();
 
-// Register GSC auth direct route
-app.use('/api/gsc', gscAuthDirectRoute);
+  // Initialize application services
+  initializeServices();
+  scheduleCleanupTasks();
+
+  // Register GSC auth direct route
+  app.use('/api/gsc', gscAuthDirectRoute);
 
 // Register GSC callback route
 app.get('/api/gsc/callback', async (req, res) => {
@@ -336,8 +341,8 @@ app.post('/api/debug/echo', express.json(), (req, res) => {
   });
 });
 
-// Register API routes
-const httpServer = registerRoutes(app);
+// Register API routes (async)
+const httpServer = await registerRoutes(app);
 
 // Serve static files in production AFTER API routes
 if (process.env.NODE_ENV === 'production') {
@@ -360,19 +365,36 @@ app.use(errorHandler);
 
 // Health check endpoint
 app.get('/api/health', (_req, res) => {
+  const hasRedis = !!process.env.REDIS_URL || !!process.env.REDIS_TLS_URL;
+  const sessionStore = hasRedis ? 'Redis' : 'Memory';
+
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    version: process.env.npm_package_version || '1.0.0'
+    version: process.env.npm_package_version || '1.0.0',
+    sessionStore: sessionStore,
+    features: {
+      redis: hasRedis,
+      openai: !!process.env.OPENAI_API_KEY,
+      stripe: !!process.env.STRIPE_SECRET_KEY,
+      email: !!process.env.RESEND_API_KEY
+    }
   });
 });
 
-// Start the HTTP server
-const PORT = process.env.PORT || config.port;
-httpServer.listen(PORT, () => {
-  console.log(`[Server] Server is running on port ${PORT}`);
-  logger.info(`Server running on port ${PORT}`);
+  // Start the HTTP server
+  const PORT = process.env.PORT || config.port;
+  httpServer.listen(PORT, () => {
+    console.log(`[Server] Server is running on port ${PORT}`);
+    logger.info(`Server running on port ${PORT}`);
+  });
+}
+
+// Start the server
+startServer().catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
 });
 
 // Graceful shutdown handler
@@ -388,6 +410,7 @@ const gracefulShutdown = async (signal: string) => {
     // Clean up application resources
     console.log('Cleaning up application resources...');
     await cleanupServices();
+    await cleanupAuth();
     console.log('Application resources cleaned up successfully.');
 
     // Exit process

@@ -18,7 +18,7 @@ import * as trpcExpress from '@trpc/server/adapters/express';
 import { appRouter } from './router';
 import { createContext } from './trpc';
 
-export function registerRoutes(app: Express): Server {
+export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   const wss = new WebSocketServer({ noServer: true });
 
@@ -26,8 +26,8 @@ export function registerRoutes(app: Express): Server {
     ws.on("error", console.error);
   });
 
-  // First setup auth middleware
-  setupAuth(app);
+  // First setup auth middleware (async)
+  await setupAuth(app);
 
   // Register tRPC router
   app.use('/api/trpc', trpcExpress.createExpressMiddleware({

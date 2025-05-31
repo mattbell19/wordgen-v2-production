@@ -29,7 +29,8 @@
     "db:fresh": "node scripts/migrate-database.js --fresh",
     "db:status": "node scripts/migrate-database.js --status",
     "heroku-postbuild": "npm run build:client && npm run build:server",
-    "test:article": "node test-article-api.js"
+    "test:article": "node test-article-api.js",
+    "setup:production": "node scripts/setup-production.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.1",
