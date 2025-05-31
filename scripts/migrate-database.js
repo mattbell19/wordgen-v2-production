@@ -127,8 +127,11 @@ async function runFreshSetup() {
     // Create migrations table
     await createMigrationsTable();
     
-    // Run the complete initial migration
-    await runMigration('0000_initial_complete.sql');
+    // Run all available migrations in order
+    const availableMigrations = getMigrationFiles();
+    for (const migration of availableMigrations) {
+      await runMigration(migration);
+    }
     
     console.log('✅ Fresh database setup completed successfully!');
     console.log('');
