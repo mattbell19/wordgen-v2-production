@@ -76,7 +76,7 @@ function getMigrationFiles() {
 /**
  * Calculate checksum for migration file
  */
-function calculateChecksum(content) {
+async function calculateChecksum(content) {
   const crypto = await import('crypto');
   return crypto.createHash('md5').update(content).digest('hex');
 }
@@ -88,7 +88,7 @@ async function runMigration(filename) {
   const migrationsDir = join(__dirname, '..', 'db', 'migrations');
   const filePath = join(migrationsDir, filename);
   const content = readFileSync(filePath, 'utf8');
-  const checksum = calculateChecksum(content);
+  const checksum = await calculateChecksum(content);
   
   console.log(`Running migration: ${filename}`);
   
