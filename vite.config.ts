@@ -49,14 +49,10 @@ export const viteConfig = defineConfig(({ mode }) => {
       alias: {
         "@db": path.resolve(__dirname, "db"),
         "@": path.resolve(__dirname, "client", "src"),
-        "posthog-js": path.resolve(__dirname, "node_modules/posthog-js"),
-        "@tanstack/react-query": path.resolve(__dirname, "node_modules/@tanstack/react-query"),
-        "@tanstack/query-core": path.resolve(__dirname, "node_modules/@tanstack/query-core"),
-        "date-fns": path.resolve(__dirname, "node_modules/date-fns")
       },
     },
     optimizeDeps: {
-      include: ['posthog-js', '@tanstack/react-query', '@tanstack/query-core', 'date-fns'],
+      include: ['posthog-js'],
       esbuildOptions: {
         target: 'es2020',
         platform: 'browser',
@@ -82,11 +78,8 @@ export const viteConfig = defineConfig(({ mode }) => {
           manualChunks: {
             posthog: ['posthog-js'],
             vendor: [
-              '@tanstack/react-query',
-              '@tanstack/query-core',
               'react',
-              'react-dom',
-              'date-fns'
+              'react-dom'
             ],
           },
           format: 'es',

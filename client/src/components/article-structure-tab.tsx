@@ -1,15 +1,4 @@
 import React from 'react';
-import {
-  Box,
-  Checkbox,
-  Divider,
-  FormControl,
-  FormControlLabel,
-  FormGroup,
-  FormHelperText,
-  Paper,
-  Typography,
-} from '@mui/material';
 
 interface ArticleStructureSections {
   whatIs: boolean;
@@ -40,212 +29,181 @@ const ArticleStructureTab: React.FC<ArticleStructureTabProps> = ({
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>
+    <div className="p-4">
+      <h3 className="text-lg font-semibold mb-2">
         Article Sections
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      </h3>
+      <p className="text-sm text-gray-600 mb-4">
         Customize which sections to include in your article. Introduction and Conclusion are always included.
-      </Typography>
+      </p>
 
-      <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.paper', mb: 3 }}>
-        <FormControl component="fieldset" variant="standard">
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={true}
-                  disabled
-                  name="introduction"
-                />
-              }
-              label={
-                <Box>
-                  <Typography variant="body1">Introduction</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Opening paragraph that introduces the topic
-                  </Typography>
-                </Box>
-              }
+      <div className="bg-gray-50 p-4 rounded-lg mb-6">
+        <div className="space-y-3">
+          <div className="flex items-start space-x-3 p-3 border-b border-gray-200">
+            <input
+              type="checkbox"
+              checked={true}
+              disabled
+              name="introduction"
+              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <Divider sx={{ my: 1 }} />
+            <div>
+              <div className="font-medium">Introduction</div>
+              <div className="text-sm text-gray-600">
+                Opening paragraph that introduces the topic
+              </div>
+            </div>
+          </div>
             
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={sections.whatIs}
-                  onChange={handleChange}
-                  name="whatIs"
-                />
-              }
-              label={
-                <Box>
-                  <Typography variant="body1">What is [Topic]</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Definition and explanation of the main concept
-                  </Typography>
-                </Box>
-              }
+          <div className="flex items-start space-x-3 p-3 border-b border-gray-200">
+            <input
+              type="checkbox"
+              checked={sections.whatIs}
+              onChange={handleChange}
+              name="whatIs"
+              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <Divider sx={{ my: 1 }} />
+            <div>
+              <div className="font-medium">What is [Topic]</div>
+              <div className="text-sm text-gray-600">
+                Definition and explanation of the main concept
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-3 p-3 border-b border-gray-200">
+            <input
+              type="checkbox"
+              checked={sections.whyMatters}
+              onChange={handleChange}
+              name="whyMatters"
+              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <div>
+              <div className="font-medium">Why [Topic] Matters</div>
+              <div className="text-sm text-gray-600">
+                Benefits and importance of the topic
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-3 p-3 border-b border-gray-200">
+            <input
+              type="checkbox"
+              checked={sections.howTo}
+              onChange={handleChange}
+              name="howTo"
+              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <div>
+              <div className="font-medium">How to Use [Topic]</div>
+              <div className="text-sm text-gray-600">
+                Implementation steps and practical guidance
+              </div>
+            </div>
+          </div>
             
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={sections.whyMatters}
-                  onChange={handleChange}
-                  name="whyMatters"
-                />
-              }
-              label={
-                <Box>
-                  <Typography variant="body1">Why [Topic] Matters</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Benefits and importance of the topic
-                  </Typography>
-                </Box>
-              }
+          <div className="flex items-start space-x-3 p-3 border-b border-gray-200">
+            <input
+              type="checkbox"
+              checked={sections.bestPractices}
+              onChange={handleChange}
+              name="bestPractices"
+              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <Divider sx={{ my: 1 }} />
+            <div>
+              <div className="font-medium">Best Practices</div>
+              <div className="text-sm text-gray-600">
+                Tips and recommendations for optimal results
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-3 p-3 border-b border-gray-200">
+            <input
+              type="checkbox"
+              checked={sections.challenges}
+              onChange={handleChange}
+              name="challenges"
+              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <div>
+              <div className="font-medium">Common Challenges</div>
+              <div className="text-sm text-gray-600">
+                Problems and solutions related to the topic
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-3 p-3 border-b border-gray-200">
+            <input
+              type="checkbox"
+              checked={sections.caseStudies}
+              onChange={handleChange}
+              name="caseStudies"
+              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <div>
+              <div className="font-medium">Case Studies/Examples</div>
+              <div className="text-sm text-gray-600">
+                Real-world applications and examples
+              </div>
+            </div>
+          </div>
             
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={sections.howTo}
-                  onChange={handleChange}
-                  name="howTo"
-                />
-              }
-              label={
-                <Box>
-                  <Typography variant="body1">How to Use [Topic]</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Implementation steps and practical guidance
-                  </Typography>
-                </Box>
-              }
+          <div className="flex items-start space-x-3 p-3 border-b border-gray-200">
+            <input
+              type="checkbox"
+              checked={sections.comparison}
+              onChange={handleChange}
+              name="comparison"
+              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <Divider sx={{ my: 1 }} />
-            
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={sections.bestPractices}
-                  onChange={handleChange}
-                  name="bestPractices"
-                />
-              }
-              label={
-                <Box>
-                  <Typography variant="body1">Best Practices</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Tips and recommendations for optimal results
-                  </Typography>
-                </Box>
-              }
+            <div>
+              <div className="font-medium">Comparison</div>
+              <div className="text-sm text-gray-600">
+                Comparing with alternatives or competitors
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-3 p-3 border-b border-gray-200">
+            <input
+              type="checkbox"
+              checked={sections.futureTrends}
+              onChange={handleChange}
+              name="futureTrends"
+              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <Divider sx={{ my: 1 }} />
-            
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={sections.challenges}
-                  onChange={handleChange}
-                  name="challenges"
-                />
-              }
-              label={
-                <Box>
-                  <Typography variant="body1">Common Challenges</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Problems and solutions related to the topic
-                  </Typography>
-                </Box>
-              }
+            <div>
+              <div className="font-medium">Future Trends</div>
+              <div className="text-sm text-gray-600">
+                Upcoming developments and predictions
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-3 p-3">
+            <input
+              type="checkbox"
+              checked={true}
+              disabled
+              name="conclusion"
+              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <Divider sx={{ my: 1 }} />
-            
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={sections.caseStudies}
-                  onChange={handleChange}
-                  name="caseStudies"
-                />
-              }
-              label={
-                <Box>
-                  <Typography variant="body1">Case Studies/Examples</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Real-world applications and examples
-                  </Typography>
-                </Box>
-              }
-            />
-            <Divider sx={{ my: 1 }} />
-            
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={sections.comparison}
-                  onChange={handleChange}
-                  name="comparison"
-                />
-              }
-              label={
-                <Box>
-                  <Typography variant="body1">Comparison</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Comparing with alternatives or competitors
-                  </Typography>
-                </Box>
-              }
-            />
-            <Divider sx={{ my: 1 }} />
-            
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={sections.futureTrends}
-                  onChange={handleChange}
-                  name="futureTrends"
-                />
-              }
-              label={
-                <Box>
-                  <Typography variant="body1">Future Trends</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Upcoming developments and predictions
-                  </Typography>
-                </Box>
-              }
-            />
-            <Divider sx={{ my: 1 }} />
-            
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={true}
-                  disabled
-                  name="conclusion"
-                />
-              }
-              label={
-                <Box>
-                  <Typography variant="body1">Conclusion</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Summary and closing thoughts
-                  </Typography>
-                </Box>
-              }
-            />
-          </FormGroup>
-          <FormHelperText>
-            Select at least 2 sections for a well-structured article
-          </FormHelperText>
-        </FormControl>
-      </Paper>
-    </Box>
+            <div>
+              <div className="font-medium">Conclusion</div>
+              <div className="text-sm text-gray-600">
+                Summary and closing thoughts
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-4 text-sm text-gray-600">
+          Select at least 2 sections for a well-structured article
+        </div>
+      </div>
+    </div>
   );
 };
 

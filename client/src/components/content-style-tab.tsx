@@ -1,17 +1,4 @@
 import React from 'react';
-import {
-  Box,
-  FormControl,
-  FormHelperText,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
-  SelectChangeEvent,
-  Typography,
-  Slider,
-  Grid,
-} from '@mui/material';
 
 interface ContentStyle {
   tone: string;
@@ -29,7 +16,7 @@ const ContentStyleTab: React.FC<ContentStyleTabProps> = ({
   contentStyle,
   onChange,
 }) => {
-  const handleSelectChange = (event: SelectChangeEvent) => {
+  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = event.target;
     onChange({
       ...contentStyle,
@@ -37,152 +24,150 @@ const ContentStyleTab: React.FC<ContentStyleTabProps> = ({
     });
   };
 
-  const handleSliderChange = (_event: Event, newValue: number | number[]) => {
+  const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onChange({
       ...contentStyle,
-      contentDensity: newValue as number,
+      contentDensity: parseInt(event.target.value),
     });
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>
+    <div className="p-4">
+      <h3 className="text-lg font-semibold mb-2">
         Content Style
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      </h3>
+      <p className="text-sm text-gray-600 mb-4">
         Customize the tone, style, and target audience for your article.
-      </Typography>
+      </p>
 
-      <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.paper', mb: 3 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth variant="outlined" sx={{ mb: 3 }}>
-              <InputLabel id="tone-label">Tone</InputLabel>
-              <Select
-                labelId="tone-label"
-                id="tone"
-                name="tone"
-                value={contentStyle.tone}
-                onChange={handleSelectChange}
-                label="Tone"
-              >
-                <MenuItem value="professional">Professional</MenuItem>
-                <MenuItem value="casual">Casual</MenuItem>
-                <MenuItem value="friendly">Friendly</MenuItem>
-                <MenuItem value="authoritative">Authoritative</MenuItem>
-                <MenuItem value="conversational">Conversational</MenuItem>
-                <MenuItem value="educational">Educational</MenuItem>
-                <MenuItem value="persuasive">Persuasive</MenuItem>
-              </Select>
-              <FormHelperText>
-                The overall tone of voice for your article
-              </FormHelperText>
-            </FormControl>
-          </Grid>
+      <div className="bg-gray-50 p-4 rounded-lg mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="tone" className="block text-sm font-medium text-gray-700 mb-1">
+              Tone
+            </label>
+            <select
+              id="tone"
+              name="tone"
+              value={contentStyle.tone}
+              onChange={handleSelectChange}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="professional">Professional</option>
+              <option value="casual">Casual</option>
+              <option value="friendly">Friendly</option>
+              <option value="authoritative">Authoritative</option>
+              <option value="conversational">Conversational</option>
+              <option value="educational">Educational</option>
+              <option value="persuasive">Persuasive</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              The overall tone of voice for your article
+            </p>
+          </div>
 
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth variant="outlined" sx={{ mb: 3 }}>
-              <InputLabel id="reading-level-label">Reading Level</InputLabel>
-              <Select
-                labelId="reading-level-label"
-                id="readingLevel"
-                name="readingLevel"
-                value={contentStyle.readingLevel}
-                onChange={handleSelectChange}
-                label="Reading Level"
-              >
-                <MenuItem value="basic">Basic (Grade 6-8)</MenuItem>
-                <MenuItem value="intermediate">Intermediate (Grade 9-12)</MenuItem>
-                <MenuItem value="advanced">Advanced (College Level)</MenuItem>
-                <MenuItem value="expert">Expert (Specialized Knowledge)</MenuItem>
-              </Select>
-              <FormHelperText>
-                The complexity level of the language used
-              </FormHelperText>
-            </FormControl>
-          </Grid>
+          <div>
+            <label htmlFor="readingLevel" className="block text-sm font-medium text-gray-700 mb-1">
+              Reading Level
+            </label>
+            <select
+              id="readingLevel"
+              name="readingLevel"
+              value={contentStyle.readingLevel}
+              onChange={handleSelectChange}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="basic">Basic (Grade 6-8)</option>
+              <option value="intermediate">Intermediate (Grade 9-12)</option>
+              <option value="advanced">Advanced (College Level)</option>
+              <option value="expert">Expert (Specialized Knowledge)</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              The complexity level of the language used
+            </p>
+          </div>
 
-          <Grid item xs={12}>
-            <Typography id="content-density-slider" gutterBottom>
-              Content Density
-            </Typography>
-            <Slider
+          <div className="md:col-span-2">
+            <label htmlFor="contentDensity" className="block text-sm font-medium text-gray-700 mb-1">
+              Content Density: {
+                contentStyle.contentDensity === 1 ? 'Concise' :
+                contentStyle.contentDensity === 2 ? 'Somewhat Concise' :
+                contentStyle.contentDensity === 3 ? 'Balanced' :
+                contentStyle.contentDensity === 4 ? 'Somewhat Comprehensive' :
+                'Comprehensive'
+              }
+            </label>
+            <input
+              type="range"
+              id="contentDensity"
+              name="contentDensity"
+              min="1"
+              max="5"
+              step="1"
               value={contentStyle.contentDensity}
               onChange={handleSliderChange}
-              aria-labelledby="content-density-slider"
-              valueLabelDisplay="auto"
-              step={1}
-              marks={[
-                {
-                  value: 1,
-                  label: 'Concise',
-                },
-                {
-                  value: 3,
-                  label: 'Balanced',
-                },
-                {
-                  value: 5,
-                  label: 'Comprehensive',
-                },
-              ]}
-              min={1}
-              max={5}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
-            <FormHelperText>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Concise</span>
+              <span>Balanced</span>
+              <span>Comprehensive</span>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
               Adjust how detailed and in-depth the content should be
-            </FormHelperText>
-          </Grid>
+            </p>
+          </div>
 
-          <Grid item xs={12}>
-            <FormControl fullWidth variant="outlined" sx={{ mt: 2 }}>
-              <InputLabel id="target-audience-label">Target Audience</InputLabel>
-              <Select
-                labelId="target-audience-label"
-                id="targetAudience"
-                name="targetAudience"
-                value={contentStyle.targetAudience}
-                onChange={handleSelectChange}
-                label="Target Audience"
-              >
-                <MenuItem value="beginners">Beginners (New to the topic)</MenuItem>
-                <MenuItem value="intermediate">Intermediate (Some knowledge)</MenuItem>
-                <MenuItem value="advanced">Advanced (Experienced users)</MenuItem>
-                <MenuItem value="experts">Experts (Professional level)</MenuItem>
-                <MenuItem value="general">General Audience (Mixed knowledge levels)</MenuItem>
-              </Select>
-              <FormHelperText>
-                Who the article is primarily written for
-              </FormHelperText>
-            </FormControl>
-          </Grid>
-        </Grid>
-      </Paper>
+          <div className="md:col-span-2">
+            <label htmlFor="targetAudience" className="block text-sm font-medium text-gray-700 mb-1">
+              Target Audience
+            </label>
+            <select
+              id="targetAudience"
+              name="targetAudience"
+              value={contentStyle.targetAudience}
+              onChange={handleSelectChange}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="beginners">Beginners (New to the topic)</option>
+              <option value="intermediate">Intermediate (Some knowledge)</option>
+              <option value="advanced">Advanced (Experienced users)</option>
+              <option value="experts">Experts (Professional level)</option>
+              <option value="general">General Audience (Mixed knowledge levels)</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Who the article is primarily written for
+            </p>
+          </div>
+        </div>
+      </div>
 
-      <Box sx={{ mt: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-        <Typography variant="subtitle2" gutterBottom>
+      <div className="mt-6 p-4 bg-gray-100 rounded-lg">
+        <h4 className="text-sm font-semibold mb-3">
           Style Preview
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 1 }}>
-          <strong>Tone:</strong> {contentStyle.tone.charAt(0).toUpperCase() + contentStyle.tone.slice(1)}
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 1 }}>
-          <strong>Reading Level:</strong> {contentStyle.readingLevel.charAt(0).toUpperCase() + contentStyle.readingLevel.slice(1)}
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 1 }}>
-          <strong>Content Density:</strong> {
-            contentStyle.contentDensity === 1 ? 'Concise' :
-            contentStyle.contentDensity === 2 ? 'Somewhat Concise' :
-            contentStyle.contentDensity === 3 ? 'Balanced' :
-            contentStyle.contentDensity === 4 ? 'Somewhat Comprehensive' :
-            'Comprehensive'
-          }
-        </Typography>
-        <Typography variant="body2">
-          <strong>Target Audience:</strong> {contentStyle.targetAudience.charAt(0).toUpperCase() + contentStyle.targetAudience.slice(1)}
-        </Typography>
-      </Box>
-    </Box>
+        </h4>
+        <div className="text-sm space-y-1">
+          <div>
+            <strong>Tone:</strong> {contentStyle.tone.charAt(0).toUpperCase() + contentStyle.tone.slice(1)}
+          </div>
+          <div>
+            <strong>Reading Level:</strong> {contentStyle.readingLevel.charAt(0).toUpperCase() + contentStyle.readingLevel.slice(1)}
+          </div>
+          <div>
+            <strong>Content Density:</strong> {
+              contentStyle.contentDensity === 1 ? 'Concise' :
+              contentStyle.contentDensity === 2 ? 'Somewhat Concise' :
+              contentStyle.contentDensity === 3 ? 'Balanced' :
+              contentStyle.contentDensity === 4 ? 'Somewhat Comprehensive' :
+              'Comprehensive'
+            }
+          </div>
+          <div>
+            <strong>Target Audience:</strong> {contentStyle.targetAudience.charAt(0).toUpperCase() + contentStyle.targetAudience.slice(1)}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
