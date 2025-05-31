@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import { setupAuth } from './auth'
 import { registerRoutes } from './routes'
 import config from './config'
-import { serveStatic } from './vite'
+import { serveStatic } from './static'
 import path from 'path';
 import crypto from 'crypto';
 import { initializeServices, scheduleCleanupTasks, cleanupServices } from './startup';

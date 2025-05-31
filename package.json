@@ -142,8 +142,7 @@
     "xmldom": "^0.6.0",
     "zod": "^3.24.1",
     "zustand": "^5.0.3",
-    "p-limit": "^6.2.0",
-    "cross-env": "^7.0.3"
+    "p-limit": "^6.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
