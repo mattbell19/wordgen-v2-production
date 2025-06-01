@@ -102,6 +102,10 @@ router.post('/article/generate',
           return ApiResponse.tooManyRequests(res, 'API rate limit exceeded. Please try again later.', 'RATE_LIMIT_EXCEEDED');
         }
 
+        if (error.message?.includes('timeout') || error.code === 'ETIMEDOUT') {
+          return ApiResponse.serverError(res, 'Article generation is taking longer than expected. Please try again with a shorter word count.', 'TIMEOUT_ERROR');
+        }
+
         return ApiResponse.serverError(res, 'Failed to generate article. Please try again.', 'GENERATION_FAILED');
       }
 

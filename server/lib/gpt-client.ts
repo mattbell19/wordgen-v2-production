@@ -354,10 +354,13 @@ ${externalLinks.slice(0, 3).map(link => `  - Link to: ${link.url} with title: "$
       return placeholderContent;
     }
 
-    // Call OpenAI API
+    // Call OpenAI API with optimized settings for faster response
     try {
+      console.log('Calling OpenAI API for article generation...');
+      const startTime = Date.now();
+
       const response = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini', // Use faster model for better response times
         messages: [
           {
             role: 'system',
@@ -369,8 +372,12 @@ ${externalLinks.slice(0, 3).map(link => `  - Link to: ${link.url} with title: "$
           }
         ],
         temperature: 0.7,
-        max_tokens: 4000
+        max_tokens: 3000, // Reduced for faster response
+        timeout: 25000 // 25 second timeout to stay under Heroku's 30s limit
       });
+
+      const endTime = Date.now();
+      console.log(`OpenAI API call completed in ${endTime - startTime}ms`);
 
       const content = response.choices[0]?.message?.content;
 
