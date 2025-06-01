@@ -328,115 +328,46 @@ export function ArticlePreview({ article, isLoading = false }: ArticlePreviewPro
   }
 
   return (
-    <div className="flex h-screen">
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-hidden">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center text-sm text-gray-500">
-                <Clock className="h-4 w-4 mr-1" />
-                {article?.readingTime || 8} min read
-              </div>
-              <div className="flex items-center text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                <FileText className="h-4 w-4 mr-1" />
-                {article?.wordCount || 1750} words
-              </div>
+    <div className="w-full">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center text-sm text-gray-500">
+              <Clock className="h-4 w-4 mr-1" />
+              {article?.readingTime || 8} min read
             </div>
-
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm">
-                <Copy className="h-4 w-4 mr-2" />
-                Copy
-              </Button>
-              <Button variant="outline" size="sm">
-                <Share className="h-4 w-4 mr-2" />
-                Share
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => downloadArticle('txt')}>
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-              <Button variant="outline" size="sm">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                SEO Analysis
-              </Button>
+            <div className="flex items-center text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">
+              <FileText className="h-4 w-4 mr-1" />
+              {article?.wordCount || 1750} words
             </div>
           </div>
-        </div>
 
-        {/* Article Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto">
-            {article && renderContent(article.content)}
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm">
+              <Copy className="h-4 w-4 mr-2" />
+              Copy
+            </Button>
+            <Button variant="outline" size="sm">
+              <Share className="h-4 w-4 mr-2" />
+              Share
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => downloadArticle('txt')}>
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+            <Button variant="outline" size="sm">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              SEO Analysis
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Sidebar */}
-      <div className="w-80 bg-gray-50 border-l border-gray-200 overflow-y-auto">
-        <div className="p-6 space-y-6">
-          {/* SEO Analysis Header */}
-          <div className="flex items-center space-x-2">
-            <BarChart3 className="h-5 w-5 text-purple-600" />
-            <h3 className="text-lg font-semibold text-gray-900">SEO Analysis</h3>
-          </div>
-
-          {/* Keyword Density */}
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <h4 className="font-medium text-gray-900 mb-3">Keyword Density</h4>
-            <div className="text-2xl font-bold text-green-600 mb-2">2.3%</div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-              <div className="bg-green-500 h-2 rounded-full" style={{ width: '46%' }}></div>
-            </div>
-            <p className="text-sm text-gray-600">Optimal range: 1-3%</p>
-          </div>
-
-          {/* Readability */}
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <h4 className="font-medium text-gray-900 mb-3">Readability</h4>
-            <div className="text-lg font-semibold text-green-600 mb-2">Good</div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-              <div className="bg-green-500 h-2 rounded-full" style={{ width: '85%' }}></div>
-            </div>
-            <p className="text-sm text-gray-600">Grade level: 8th grade</p>
-          </div>
-
-          {/* Meta Score */}
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <h4 className="font-medium text-gray-900 mb-3">Meta Score</h4>
-            <div className="text-2xl font-bold text-blue-600 mb-2">92/100</div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-              <div className="bg-blue-500 h-2 rounded-full" style={{ width: '92%' }}></div>
-            </div>
-            <p className="text-sm text-gray-600">Excellent optimization</p>
-          </div>
-
-          {/* Keywords */}
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center space-x-2 mb-3">
-              <Hash className="h-4 w-4 text-purple-600" />
-              <h4 className="font-medium text-gray-900">Keywords</h4>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                  coffee machines
-                </span>
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                  best coffee makers
-                </span>
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                  espresso machines
-                </span>
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                  brewing guide
-                </span>
-              </div>
-            </div>
-          </div>
+      {/* Article Content */}
+      <div className="px-6">
+        <div className="max-w-4xl mx-auto">
+          {article && renderContent(article.content)}
         </div>
       </div>
     </div>

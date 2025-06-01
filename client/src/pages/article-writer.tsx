@@ -39,7 +39,7 @@ export default function ArticleWriter() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-8">
               <TabsTrigger value="write" className="flex items-center gap-2">
@@ -65,7 +65,7 @@ export default function ArticleWriter() {
             </TabsContent>
 
             <TabsContent value="preview" className="space-y-6">
-              <Card className="border-0 shadow-lg">
+              <Card className="border-0 shadow-lg overflow-visible">
                 <CardContent className="p-0">
                   <ArticlePreview article={article} isLoading={isGenerating} />
                 </CardContent>
