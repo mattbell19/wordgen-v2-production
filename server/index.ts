@@ -389,42 +389,53 @@ app.use(errorHandler);
     console.log(`[Server] Server is running on port ${PORT}`);
     logger.info(`Server running on port ${PORT}`);
   });
+
+  // Return the server instance for graceful shutdown
+  return httpServer;
 }
 
-// Start the server
-startServer().catch((error) => {
-  console.error('Failed to start server:', error);
-  process.exit(1);
-});
+// Start the server and set up graceful shutdown
+let serverInstance: any = null;
 
-// Graceful shutdown handler
-const gracefulShutdown = async (signal: string) => {
-  console.log(`\n${signal} signal received: shutting down server`);
+startServer()
+  .then((httpServer) => {
+    serverInstance = httpServer;
 
-  // First close the server to stop accepting new connections
-  httpServer.close(() => {
-    console.log('Server closed');
-  });
+    // Graceful shutdown handler
+    const gracefulShutdown = async (signal: string) => {
+      console.log(`\n${signal} signal received: shutting down server`);
 
-  try {
-    // Clean up application resources
-    console.log('Cleaning up application resources...');
-    await cleanupServices();
-    await cleanupAuth();
-    console.log('Application resources cleaned up successfully.');
+      if (serverInstance) {
+        // First close the server to stop accepting new connections
+        serverInstance.close(() => {
+          console.log('Server closed');
+        });
+      }
 
-    // Exit process
-    process.exit(0);
-  } catch (error) {
-    console.error('Error during cleanup:', error);
+      try {
+        // Clean up application resources
+        console.log('Cleaning up application resources...');
+        await cleanupServices();
+        await cleanupAuth();
+        console.log('Application resources cleaned up successfully.');
+
+        // Exit process
+        process.exit(0);
+      } catch (error) {
+        console.error('Error during cleanup:', error);
+        process.exit(1);
+      }
+    };
+
+    // Handle various shutdown signals
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    process.on('SIGQUIT', () => gracefulShutdown('SIGQUIT'));
+  })
+  .catch((error) => {
+    console.error('Failed to start server:', error);
     process.exit(1);
-  }
-};
-
-// Handle various shutdown signals
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-process.on('SIGQUIT', () => gracefulShutdown('SIGQUIT'));
+  });
 
 // Unhandled rejection handler
 process.on('unhandledRejection', (reason, promise) => {
