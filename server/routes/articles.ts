@@ -113,6 +113,7 @@ expressRouter.post(
           content,
           wordCount,
           readingTime,
+          creditsUsed: 1, // Default to 1 credit per article
           userId, // Always use the current user's ID as the creator
           settings: settings as ArticleSettings,
           primaryKeyword: primaryKeyword || null,

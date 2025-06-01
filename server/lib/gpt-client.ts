@@ -328,7 +328,7 @@ ${externalLinks.slice(0, 3).map(link => `  - Link to: ${link.url} with title: "$
     // Call OpenAI API
     try {
       const response = await openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',

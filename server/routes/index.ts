@@ -4,6 +4,7 @@ import { appRouter } from '../router';
 import { createContext } from '../trpc';
 import { articleRoutes } from './articles';
 import { aiRoutes } from './ai';
+import { aiSeoRoutes } from './ai-seo';
 import seoAuditRoutes from './seo-audit';
 import { wordRoutes } from './words';
 import userConsolidatedRouter from './user-consolidated';
@@ -55,6 +56,7 @@ export function registerRoutes(app: express.Express): void {
   console.log('[ROUTES] Mounting routes under /api');
   router.use('/articles', articleRoutes);
   router.use('/ai', aiRoutes);
+  router.use('/ai-seo', aiSeoRoutes);
   router.use('/words', wordRoutes);
   router.use('/seo-audit', seoAuditRoutes);
   router.use('/user', userConsolidatedRouter);

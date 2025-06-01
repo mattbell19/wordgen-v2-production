@@ -44,6 +44,7 @@ import SettingsPage from "@/pages/admin/settings";
 // import SavedWords from "@/pages/saved-words";
 import CombinedSavedKeywords from "@/pages/combined-saved-keywords";
 import SearchConsole from "@/pages/dashboard/search-console";
+import { AISEOPage } from "@/pages/AISEOPage";
 import { trpc, trpcClient } from "./utils/trpc";
 import { TeamProvider } from "@/hooks/use-team-context";
 
@@ -228,14 +229,14 @@ function App() {
                 </Layout>
               </RequireAuth>
             )} /> */}
-            {/* AI Agent route removed */}
-            {/* <Route path="/dashboard/agent" component={() => (
+            {/* AI SEO Agent route */}
+            <Route path="/dashboard/ai-seo" component={() => (
               <RequireAuth>
                 <Layout>
-                  <Agent />
+                  <AISEOPage />
                 </Layout>
               </RequireAuth>
-            )} /> */}
+            )} />
             <Route path="/dashboard/sitemap-analyzer" component={() => (
               <RequireAuth>
                 <Layout>

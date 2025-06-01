@@ -78,6 +78,7 @@ export const articles = pgTable("articles", {
   status: text("status").default("pending").notNull(),
   wordCount: integer("word_count").notNull(),
   readingTime: integer("reading_time").notNull(),
+  creditsUsed: integer("credits_used").default(1).notNull(),
   settings: json("settings").$type<ArticleSettings>().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

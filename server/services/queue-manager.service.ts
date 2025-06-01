@@ -119,6 +119,7 @@ export class QueueManagerService {
           content: result.article.content,
           wordCount: result.article.wordCount,
           readingTime: Math.ceil(result.article.wordCount / 200),
+          creditsUsed: 1,
           settings: {
             keyword: item.keyword,
             tone: item.settings.tone,

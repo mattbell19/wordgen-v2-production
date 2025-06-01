@@ -89,7 +89,7 @@ IMPORTANT:
     console.log('Sending request to GPT with prompt length:', systemPrompt.length);
     
     const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
+      model: 'gpt-4o',
       messages: [
         {
           role: 'system',
@@ -184,7 +184,7 @@ Track word count internally but present a clean, professional output without wor
       console.log('Word count outside acceptable range, retrying with more explicit instructions...');
       
       const retryResponse = await openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',

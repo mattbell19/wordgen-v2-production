@@ -24,6 +24,7 @@ export async function createContent(data: {
       projectId: data.projectId,
       wordCount: data.wordCount,
       readingTime: data.readingTime,
+      creditsUsed: 1,
       settings: data.settings,
       primaryKeyword: data.primaryKeyword,
     })

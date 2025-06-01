@@ -246,7 +246,7 @@ ${Array(15).fill('<p>This is conclusion content.</p>').join('\n')}`;
 
       expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: 'gpt-4-turbo-preview',
+          model: 'gpt-4o',
           temperature: 0.7,
           max_tokens: 4000,
           messages: expect.arrayContaining([

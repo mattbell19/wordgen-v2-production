@@ -17,7 +17,8 @@ import {
   // Tag, // No longer used after Word Generator removal
   // BookmarkIcon, // No longer used after Saved Words removal
   LineChart,
-  Brain
+  Brain,
+  Sparkles
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -118,13 +119,12 @@ export function SidebarNav({ className }: SidebarNavProps) {
     //   icon: BarChart2,
     //   tourId: "seo-audit",
     // },
-    // AI Agent removed
-    // {
-    //   href: "/dashboard/agent",
-    //   label: "AI SEO Agent",
-    //   icon: Bot,
-    //   tourId: "ai-agent",
-    // },
+    {
+      href: "/dashboard/ai-seo",
+      label: "AI SEO Agent",
+      icon: Sparkles,
+      tourId: "ai-seo-agent",
+    },
     {
       href: "/dashboard/sitemap-analyzer",
       label: "Indexing",
