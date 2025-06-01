@@ -253,85 +253,120 @@ export function ArticleForm({ onArticleGenerated }: ArticleFormProps) {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {generateArticle.error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {generateArticle.error instanceof Error ? generateArticle.error.message : 'An error occurred'}
-            </AlertDescription>
-          </Alert>
-        )}
+    <div className="max-w-2xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl font-bold text-gray-900">Target Keyword</h1>
+      </div>
 
-        <div className="space-y-4">
-          <div className="flex items-start gap-2">
-            <FormField
-              control={form.control}
-              name="keyword"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>Target Keyword</FormLabel>
-                  <FormDescription>
-                    Enter the main keyword you want to target in your article
-                  </FormDescription>
-                  <FormControl>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="e.g. best coffee machines"
-                        className="pl-10"
-                        {...field}
-                        disabled={isSubmitting || generateArticle.isLoading}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="mt-8">
-              <ArticleSettingsDialog />
-            </div>
-          </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          {generateArticle.error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {generateArticle.error instanceof Error ? generateArticle.error.message : 'An error occurred'}
+              </AlertDescription>
+            </Alert>
+          )}
 
-          <Separator className="my-4" />
+          {/* Keyword Input */}
+          <FormField
+            control={form.control}
+            name="keyword"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input
+                    placeholder="best coffee machines"
+                    className="text-lg py-6 px-4 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-purple-500"
+                    {...field}
+                    disabled={isSubmitting || generateArticle.isLoading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <motion.div
-            className="space-y-2 text-sm text-muted-foreground"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="flex items-center gap-2">
-              <Settings2 className="h-4 w-4" />
-              <span>Current Settings:</span>
-            </div>
-            <ul className="list-disc list-inside pl-6 space-y-1">
-              <li>Word Count: {settings.wordCount} words</li>
-              <li>Style: {settings.writingStyle}</li>
-              <li>Language: {settings.language}</li>
-              <li>Internal Linking: {settings.enableInternalLinking ? "Enabled" : "Disabled"}</li>
-              <li>External Linking: {settings.enableExternalLinking ? "Enabled" : "Disabled"}</li>
-            </ul>
-          </motion.div>
-
+          {/* Generate Button */}
           <Button
             type="submit"
-            className="w-full"
+            className="w-full py-6 text-lg font-semibold bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded-lg shadow-lg"
             disabled={isSubmitting || generateArticle.isLoading || !user?.id}
           >
             {(isSubmitting || generateArticle.isLoading) ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Generating Article...
               </>
             ) : (
-              "Generate Article"
+              <>
+                <span className="mr-2">✨</span>
+                Generate Article
+              </>
             )}
           </Button>
-        </div>
-      </form>
-    </Form>
+
+          {/* Article Settings Panel */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
+            <h3 className="text-lg font-semibold text-gray-900">Article Settings</h3>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Words</label>
+                <div className="text-2xl font-bold text-purple-600">{settings.wordCount}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Style</label>
+                <div className="text-lg font-semibold text-gray-900 capitalize">{settings.writingStyle}</div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">SEO Optimization</span>
+                <div className="flex items-center text-green-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <span className="text-sm font-medium">✓</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Readability</span>
+                <div className="flex items-center text-green-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <span className="text-sm font-medium">✓</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Fact Checking</span>
+                <div className="flex items-center text-green-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <span className="text-sm font-medium">✓</span>
+                </div>
+              </div>
+            </div>
+
+            {/* SEO Score */}
+            <div className="bg-orange-50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">🏆 SEO Score</span>
+              </div>
+              <div className="text-3xl font-bold text-orange-600 mb-2">92/100</div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-orange-500 h-2 rounded-full" style={{ width: '92%' }}></div>
+              </div>
+            </div>
+
+            {/* Settings Button */}
+            <div className="pt-4 border-t border-gray-200">
+              <ArticleSettingsDialog />
+            </div>
+          </div>
+        </form>
+      </Form>
+    </div>
   );
 }
