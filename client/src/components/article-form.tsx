@@ -349,16 +349,7 @@ export function ArticleForm({ onArticleGenerated }: ArticleFormProps) {
               </div>
             </div>
 
-            {/* SEO Score */}
-            <div className="bg-orange-50 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">🏆 SEO Score</span>
-              </div>
-              <div className="text-3xl font-bold text-orange-600 mb-2">92/100</div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-orange-500 h-2 rounded-full" style={{ width: '92%' }}></div>
-              </div>
-            </div>
+
 
             {/* Settings Button */}
             <div className="pt-4 border-t border-gray-200">

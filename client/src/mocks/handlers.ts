@@ -16,53 +16,8 @@ interface KeywordResearchRequest {
 }
 
 export const handlers = [
-  // Auth handlers
-  http.post('/api/login', async ({ request }) => {
-    const { email, password } = await request.json() as LoginRequest;
-    
-    if (email === 'test@example.com' && password === 'password') {
-      return HttpResponse.json({
-        ok: true,
-        user: {
-          id: 1,
-          email: 'test@example.com',
-          name: 'Test User',
-          isAdmin: false,
-        },
-      });
-    }
-    
-    return new HttpResponse(null, {
-      status: 401,
-      statusText: 'Unauthorized',
-    });
-  }),
-
-  http.post('/api/register', async ({ request }) => {
-    const { email, password } = await request.json() as RegisterRequest;
-    
-    return HttpResponse.json({
-      ok: true,
-      user: {
-        id: 1,
-        email,
-        name: email.split('@')[0],
-        isAdmin: false,
-      },
-    });
-  }),
-
-  http.get('/api/user', () => {
-    return HttpResponse.json({
-      ok: true,
-      user: {
-        id: 1,
-        email: 'test@example.com',
-        name: 'Test User',
-        isAdmin: false,
-      },
-    });
-  }),
+  // MSW handlers disabled - using real authentication
+  // Auth handlers removed to prevent interference with real auth system
 
   // Article handlers
   http.get('/api/articles', () => {

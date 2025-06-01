@@ -233,9 +233,29 @@ export function ArticlePreview({ article, isLoading = false }: ArticlePreviewPro
 
   // Enhanced function to convert markdown to HTML with better handling of special sections
   const renderContent = (content: string) => {
+    // Clean the content first - remove any stray quotes or malformed JSON artifacts
+    let cleanedContent = content;
+
+    // Remove any leading/trailing quotes that might be from JSON parsing issues
+    cleanedContent = cleanedContent.replace(/^["']|["']$/g, '');
+
+    // Remove any stray "html or 'html at the beginning
+    cleanedContent = cleanedContent.replace(/^["']?html["']?\s*/i, '');
+
+    // Remove any other common JSON artifacts
+    cleanedContent = cleanedContent.replace(/^```html\s*/i, '');
+    cleanedContent = cleanedContent.replace(/\s*```$/i, '');
+
+    // Remove any escaped quotes that might be causing issues
+    cleanedContent = cleanedContent.replace(/\\"/g, '"');
+    cleanedContent = cleanedContent.replace(/\\'/g, "'");
+
+    // Remove any leading whitespace or newlines
+    cleanedContent = cleanedContent.trim();
+
     // First, preserve HTML sections like Table of Contents, FAQ, and Related Keywords
     const preservedSections: {[key: string]: string} = {};
-    let processedContent = content;
+    let processedContent = cleanedContent;
 
     // Preserve HTML sections by replacing them with placeholders
     const htmlSectionRegex = /(<div class="[^"]*">|<section class="[^"]*">)[\s\S]*?(<\/div>|<\/section>)/g;

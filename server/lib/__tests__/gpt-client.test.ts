@@ -1,22 +1,25 @@
 import { generateArticle } from '../gpt-client';
-import OpenAI from 'openai';
 import type { ArticleCreationParams } from '../../services/article.service';
 import { internalLinkService } from '../../services/internal-link.service';
 import { searchUsageService } from '../../services/search-usage.service';
 import { ExternalLinkService } from '../../services/external-link.service';
+import OpenAI from 'openai';
 
 // Mock OpenAI
 jest.mock('openai', () => {
-  return {
-    default: jest.fn().mockImplementation(() => ({
-      chat: {
-        completions: {
-          create: jest.fn()
-        }
-      }
-    }))
-  };
+  return jest.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: jest.fn(),
+      },
+    },
+  }));
 });
+
+// Mock services
+jest.mock('../../services/internal-link.service');
+jest.mock('../../services/search-usage.service');
+jest.mock('../../services/external-link.service');
 
 // Mock internal link service
 jest.mock('../../services/internal-link.service', () => ({

@@ -173,69 +173,98 @@ export async function generateArticle(params: ArticleCreationParams): Promise<st
     if (articleStructure.seoFeatures.relatedTopics) seoFeaturesList.push('Include related topics and LSI keywords');
     if (articleStructure.seoFeatures.metaDescription) seoFeaturesList.push('Include a meta description suggestion at the end');
 
-    const systemPrompt = `You are an expert content writer for a professional website, known for making complex topics simple and engaging. Your task is to write a high-quality, comprehensive article that combines SEO optimization with genuinely helpful, easy-to-read content that provides real value to readers.
+    const systemPrompt = `You are an expert SEO content writer and researcher. Your task is to create a comprehensive, high-ranking article that outperforms competitors in search results.
 
-Key Requirements:
-1. Write in a ${tone} tone that remains authoritative and professional
-   - Reading level: ${readingLevel}
-   - Content density: ${contentDensity > 3 ? 'Comprehensive and detailed' : contentDensity < 3 ? 'Concise and to-the-point' : 'Balanced'}
-   - Target audience: ${targetAudience}
+TOPIC: ${mainTopic}
+KEYWORD: ${mainTopic}
+WORDCOUNT: ${wordCount} words (minimum)
+AUDIENCE: ${targetAudience} seeking ${tone} information
+TONE: ${tone}
 
-2. Use proper HTML formatting:
-   - Main title: <h1>Title Here</h1>
-   - Major sections: <h2>Section Title</h2>
-   - Subsections: <h3>Subsection Title</h3>
-   - Paragraphs: <p>Content here</p>
-   - Lists: <ul><li>Item</li></ul> or <ol><li>Item</li></ol>
-   - Blockquotes: <blockquote>Quote text</blockquote>
-   - Tables: <table><tr><th>Header</th></tr><tr><td>Data</td></tr></table>
+STEP-BY-STEP PROCESS:
 
-3. Word Count Distribution (${wordCount} total words):
-   - Introduction: ${introWords} words
-   - Main Content: ${mainContentWords} words
-   - Conclusion: ${conclusionWords} words
+1. COMPETITIVE ANALYSIS:
+   - Analyze top-ranking content for "${mainTopic}" to understand what users expect
+   - Identify content gaps and opportunities for unique value
+   - Note common headings and structure patterns used by competitors
 
-4. Article Structure:
-   - Introduction (always include)
-   ${sectionsList.map(section => '   - ' + section).join('\n')}
-   - Conclusion (always include)
+2. CONTENT OUTLINE:
+   - Create a detailed outline with at least 12-15 headings and subheadings (H1, H2, H3, H4)
+   - Ensure logical flow that addresses key user search intents
+   - Plan comprehensive coverage that goes beyond competitor content
 
-5. Include these special content elements:
-   ${visualElementsList.map(element => '   - ' + element).join('\n')}
-
-6. SEO Requirements:
-   - Primary keyword "${mainTopic}" used 5-7 times naturally
+3. KEYWORD STRATEGY:
+   - Primary keyword: "${mainTopic}" (use 5-7 times naturally, aim for 1-2% density)
    - Related keywords: ${keywords.join(', ')}
-   ${seoFeaturesList.map(feature => '   - ' + feature).join('\n')}
-   - Optimize headings for search intent
-   - Keep paragraphs short (2-3 sentences)
-   ${articleStructure.seoFeatures.metaDescription ? '   - Include a meta description suggestion at the end: <div class="meta-suggestion"><p>Suggested meta description here</p></div>' : ''}
+   - Incorporate 10-15 long-tail keywords and LSI terms naturally throughout
+   - Focus on semantic relevance and user intent
 
-6. Enhanced Content Structure:
-   - Title: Create a compelling, benefit-driven title under 70 characters
-   - Introduction: Start with a powerful hook (surprising statistic, compelling question, or relatable scenario)
-   - Main Content: Break into clear, logical sections with H2 and H3 headings
-   - Include at least:
-     * A "What is [Topic]" section with clear definition
-     * A "Why [Topic] Matters" section with benefits
-     * A "How to" or "Best Practices" section with actionable advice
-     * A "Common Challenges" or "FAQs" section addressing reader pain points
-     * At least one comparison table for related concepts or options
-     * 2-3 image suggestions at appropriate points in the article
-   - Conclusion: Summarize key points, reinforce main benefits, and include call to action
+4. ARTICLE STRUCTURE:
 
-7. Call to Action:
-${callToAction ? `   Include this specific call to action in a styled box: <div class="call-to-action"><h3>Ready to Get Started?</h3><p>${callToAction}</p></div>` : '   End with a natural call to action in a styled box: <div class="call-to-action"><h3>Ready to Get Started?</h3><p>Encourage reader to take the next step with specific, actionable guidance.</p></div>'}
+   A. SEO-OPTIMIZED TITLE (H1):
+      - Include primary keyword "${mainTopic}"
+      - Under 60 characters for optimal SERP display
+      - Compelling and benefit-driven for ${targetAudience}
 
-IMPORTANT:
-- Write in a clear, conversational style that builds trust and authority
-- Use active voice and direct address ("you") to engage readers
-- Support all claims with evidence, examples, or logical reasoning
-- Format everything in proper HTML with semantic structure
-- Ensure content is factually accurate, comprehensive, and genuinely helpful
-- Include real-world examples and case studies where appropriate
-- Do not include any word count markers or metadata
-- Focus on providing actionable value that readers can implement immediately`;
+   B. ENGAGING INTRODUCTION (150-200 words):
+      - Hook with surprising statistic, question, or relatable scenario
+      - Introduce topic and outline article value
+      - Naturally include primary keyword
+      - Address reader's pain points or goals
+
+   C. MAIN CONTENT SECTIONS (H2/H3/H4):
+      - Each H2 section: 300-500 words of in-depth content
+      - Include relevant examples, data, case studies, and statistics
+      - Add unique insights not found in competing articles
+      - Naturally incorporate 1-2 long-tail keywords per section
+      - Speak directly to ${targetAudience} with ${tone} tone
+
+   D. VISUAL CONTENT SUGGESTIONS:
+      - Describe 2-3 custom images/diagrams/infographics
+      - Include detailed alt text optimized for keywords
+      - Format as: <div class="image-suggestion">Image: [description] | Alt text: [SEO-optimized alt text]</div>
+
+   E. QUICK TAKEAWAYS SECTION:
+      - 5-7 bullet points summarizing main insights
+      - Format as: <div class="quick-takeaways"><h3>Key Takeaways</h3><ul><li>Point 1</li><li>Point 2</li></ul></div>
+
+   F. FAQ SECTION:
+      - 5 unique, relevant questions about ${mainTopic}
+      - Concise yet informative answers
+      - Naturally include long-tail keywords
+      - Address common user concerns and search queries
+
+   G. CONCLUSION (200-250 words):
+      - Summarize key points and main message
+      - Reinforce value for ${targetAudience}
+      - Include compelling call-to-action
+      ${callToAction ? `- Use this specific CTA: "${callToAction}"` : '- Encourage next steps relevant to the topic'}
+
+5. TECHNICAL REQUIREMENTS:
+   - Use proper HTML formatting throughout
+   - H1 for title, H2 for main sections, H3/H4 for subsections
+   - Proper paragraph tags: <p>content</p>
+   - Lists: <ul><li>item</li></ul> or <ol><li>item</li></ol>
+   - Tables for comparisons: <table><tr><th>Header</th></tr><tr><td>Data</td></tr></table>
+   - Bold important phrases: <strong>text</strong>
+   - Italics for emphasis: <em>text</em>
+
+6. QUALITY STANDARDS:
+   - Maintain high perplexity and burstiness in writing style
+   - Use conversational tone that builds trust and authority
+   - Support claims with logical reasoning and examples
+   - Ensure factual accuracy and comprehensive coverage
+   - Focus on actionable value readers can implement
+   - Keep paragraphs short (2-3 sentences) for readability
+
+7. ENGAGEMENT ELEMENTS:
+   - Include pro tips: <div class="pro-tip"><p>Expert advice here</p></div>
+   - Add statistics: <div class="stat-highlight"><p>Important statistic: X% of users...</p></div>
+   - Use callout boxes: <div class="callout-box"><h4>Important Note</h4><p>Content here</p></div>
+   - Add comparison tables where relevant
+
+FINAL OUTPUT:
+Deliver a complete, publication-ready article that meets or exceeds ${wordCount} words while maintaining exceptional quality, comprehensive coverage, and strong SEO optimization throughout.`;
 
     // Add linking instructions if links are available
     let linkingInstructions = '';

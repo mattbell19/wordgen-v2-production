@@ -47,16 +47,42 @@ let redisClient: any = null;
 let sessionStore: any = null;
 
 async function initializeSessionStore() {
-  const redisUrl = process.env.REDIS_URL || process.env.REDIS_TLS_URL;
+  // Check for Redis URL from various Heroku Redis add-ons
+  const redisUrl = process.env.REDIS_URL ||
+                   process.env.REDIS_TLS_URL ||
+                   process.env.REDISCLOUD_URL ||
+                   process.env.REDISTOGO_URL;
 
   if (redisUrl) {
     try {
-      console.log('[Auth] Initializing Redis session store...');
+      console.log('[Auth] Initializing Redis session store with URL:', redisUrl.replace(/\/\/.*@/, '//***:***@'));
+
+      // Parse Redis URL to handle different formats
+      const isSecure = redisUrl.includes('rediss://');
+
       redisClient = createClient({
         url: redisUrl,
         socket: {
-          tls: redisUrl.includes('rediss://'),
-          rejectUnauthorized: false
+          tls: isSecure,
+          rejectUnauthorized: false,
+          connectTimeout: 10000,
+          lazyConnect: true
+        },
+        retry_strategy: (options) => {
+          if (options.error && options.error.code === 'ECONNREFUSED') {
+            console.error('[Auth] Redis connection refused');
+            return new Error('Redis connection refused');
+          }
+          if (options.total_retry_time > 1000 * 60 * 60) {
+            console.error('[Auth] Redis retry time exhausted');
+            return new Error('Retry time exhausted');
+          }
+          if (options.attempt > 10) {
+            console.error('[Auth] Redis max attempts reached');
+            return undefined;
+          }
+          // Reconnect after
+          return Math.min(options.attempt * 100, 3000);
         }
       });
 
@@ -72,16 +98,22 @@ async function initializeSessionStore() {
         console.log('[Auth] Redis client ready');
       });
 
+      redisClient.on('end', () => {
+        console.log('[Auth] Redis client connection ended');
+      });
+
       await redisClient.connect();
       sessionStore = new RedisStore({
         client: redisClient,
         prefix: 'wordgen:sess:',
-        ttl: 7 * 24 * 60 * 60 // 7 days in seconds
+        ttl: 7 * 24 * 60 * 60, // 7 days in seconds
+        disableTouch: false,
+        disableTTL: false
       });
       console.log('[Auth] Redis session store initialized successfully');
     } catch (error) {
       console.error('[Auth] Failed to initialize Redis session store:', error);
-      console.log('[Auth] Falling back to MemoryStore');
+      console.log('[Auth] Falling back to MemoryStore (sessions will not persist across restarts)');
       sessionStore = new MemoryStore({
         checkPeriod: 86400000, // 24 hours
         stale: false,
@@ -89,7 +121,13 @@ async function initializeSessionStore() {
       });
     }
   } else {
-    console.log('[Auth] No Redis URL found, using MemoryStore');
+    console.log('[Auth] No Redis URL found, using MemoryStore (sessions will not persist across restarts)');
+    console.log('[Auth] Available Redis environment variables:', {
+      REDIS_URL: !!process.env.REDIS_URL,
+      REDIS_TLS_URL: !!process.env.REDIS_TLS_URL,
+      REDISCLOUD_URL: !!process.env.REDISCLOUD_URL,
+      REDISTOGO_URL: !!process.env.REDISTOGO_URL
+    });
     sessionStore = new MemoryStore({
       checkPeriod: 86400000, // 24 hours
       stale: false,
@@ -111,7 +149,12 @@ export async function setupAuth(app: Express) {
   const isDev = process.env.NODE_ENV !== 'production';
 
   // Configure CORS for the session
-  const corsOrigin = isDev ? ['http://localhost:4002'] : ['https://wordgen.io'];
+  const corsOrigin = isDev
+    ? ['http://localhost:4002']
+    : [
+        'https://wordgen.io',
+        'https://wordgen-v2-production-15d78da87625.herokuapp.com'
+      ];
 
   const sessionSettings: session.SessionOptions = {
     secret: sessionSecret,
@@ -122,7 +165,7 @@ export async function setupAuth(app: Express) {
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      sameSite: isDev ? 'lax' : 'strict',
+      sameSite: isDev ? 'lax' : 'lax', // Use 'lax' for better compatibility
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/'
     },
