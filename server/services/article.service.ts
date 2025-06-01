@@ -112,8 +112,14 @@ export async function generateArticle(params: ArticleCreationParams): Promise<Ar
       }
     }
 
-    // Generate FAQ section if keyword is provided
+    // TEMPORARILY DISABLED: Additional AI features to prevent Heroku timeout
+    // These features make additional OpenAI API calls that push total time over 30s
     if (params.keyword) {
+      // TODO: Re-enable these features with async processing or job queue
+      console.log('Skipping additional AI features to prevent timeout for keyword:', params.keyword);
+
+      /*
+      // Generate FAQ section if keyword is provided
       try {
         console.log('Generating FAQ section for keyword:', params.keyword);
         const faqSection = await faqGeneratorService.generateFaqSection(params.keyword);
@@ -144,6 +150,7 @@ export async function generateArticle(params: ArticleCreationParams): Promise<Ar
         console.error('Error generating LSI keywords:', lsiError);
         // Continue without LSI keywords if there's an error
       }
+      */
 
       // Add a call-to-action section if enabled
       if (params.callToAction) {
