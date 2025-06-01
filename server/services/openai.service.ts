@@ -99,64 +99,21 @@ IMPORTANT:
           role: 'user',
           content: `Write a ${settings.wordCount}-word article about "${settings.keyword}" using proper HTML formatting.
 
-Content Structure:
-1. Title:
-   - Use <h1> tag
-   - Include main keyword "${settings.keyword}" naturally
+Structure:
+1. <h1> title with keyword "${settings.keyword}"
+2. Introduction paragraph
+3. 3-4 main sections with <h2> headings
+4. Conclusion paragraph
+5. Simple reference list
 
-2. Introduction:
-   - Start with a shocking stat, compelling question, or relatable scenario
-   - Preview 3-4 key benefits or insights
-   - Use short paragraphs with proper spacing
+Requirements:
+- Use HTML tags (h1, h2, p, ul, ol)
+- Include keyword "${settings.keyword}" naturally 3-5 times
+- Keep paragraphs short and readable
+- Target approximately ${settings.wordCount} words
+- Professional, informative tone
 
-3. Main Content:
-   - Use <h2> for major sections and <h3> for subsections
-   - Add <div class="quick-takeaway"> boxes after complex sections
-   - Include <div class="pro-tip"> callouts for insider advice
-   - Use <ul> and <ol> for lists
-   - Break down processes into clear steps
-   ${externalLinks.length > 0 ? '   - Integrate external links naturally where relevant' : ''}
-
-4. Conclusion:
-   - Summarize top 2-3 actionable takeaways
-   - End with a strong call-to-action
-   - Keep it motivating and clear
-
-5. References:
-   - Use <div class="references"> for the reference section
-   - List 4-5 current, authoritative sources
-   - Include recent dates
-
-SEO Requirements:
-- Use main keyword "${settings.keyword}" 5-7 times naturally
-- Include 3-4 related keywords in headers and content
-- Structure content with proper heading hierarchy
-- Keep paragraphs short and scannable
-
-Content Enhancement:
-1. Statistics:
-   - Include 3-4 current stats with specific numbers
-   - Cite credible sources
-   - Use <div class="stat-highlight"> for key statistics
-
-2. Examples:
-   - Provide 2-3 detailed, relatable examples
-   - Show specific numbers and outcomes
-   - Use before/after scenarios when relevant
-
-3. Visual Suggestions:
-   - Use <div class="image-suggestion"> for placement recommendations
-   - Suggest infographics for complex concepts
-   - Recommend charts for statistics
-
-Writing Style:
-- Maintain 6th-8th grade reading level
-- Use active voice
-- Keep sentences under 20 words
-- Explain technical terms immediately
-- Use conversational transitions
-
-Track word count internally but present a clean, professional output without word count markers or formatting notes.`
+Write the complete article now.`
         }
       ],
       temperature: 0.3,
@@ -178,72 +135,17 @@ Track word count internally but present a clean, professional output without wor
       percentageOfTarget: (wordCount / settings.wordCount * 100).toFixed(2) + '%'
     });
 
-    // Stricter tolerance - only allow 0.5% deviation
-    const tolerance = Math.floor(settings.wordCount * 0.005);
-    if (Math.abs(wordCount - settings.wordCount) > tolerance) {
-      console.log('Word count outside acceptable range, retrying with more explicit instructions...');
-      
-      const retryResponse = await openai.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an expert content writer. The previous attempt produced ${wordCount} words instead of the required ${settings.wordCount} words. This is unacceptable. You must match the exact word count.`
-          },
-          {
-            role: 'user',
-            content: `CRITICAL: Write EXACTLY ${settings.wordCount} words about "${settings.keyword}".
+    // More lenient tolerance to avoid timeout issues - allow 20% deviation
+    const tolerance = Math.floor(settings.wordCount * 0.2);
+    console.log('Word count tolerance check:', {
+      requested: settings.wordCount,
+      actual: wordCount,
+      tolerance: tolerance,
+      withinRange: Math.abs(wordCount - settings.wordCount) <= tolerance
+    });
 
-Previous attempt was ${wordCount} words, which is unacceptable.
-
-Required section lengths (must total exactly ${settings.wordCount}):
-A. Introduction: ${introWords} words
-B. Main Content: ${mainContentWords} words
-C. Conclusion: ${conclusionWords} words
-D. References: ${referencesWords} words
-
-Instructions:
-1. Use EXACTLY the section word counts above
-2. Count EVERY word (including title, headings, citations)
-3. Add [Section Word Count: X] after each section
-4. Add [Running Total: X/${settings.wordCount}] after each section
-5. Make sure total is EXACTLY ${settings.wordCount} words
-6. Add [FINAL WORD COUNT: ${settings.wordCount}] at the end
-
-Previous attempt for reference:
-${content}`
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 4000
-      });
-
-      const retryContent = retryResponse.choices[0]?.message?.content;
-      if (!retryContent) {
-        throw new Error('No content received from GPT retry');
-      }
-
-      const retryWordCount = countWords(retryContent);
-      console.log('Retry word count analysis:', {
-        requested: settings.wordCount,
-        actual: retryWordCount,
-        difference: Math.abs(retryWordCount - settings.wordCount),
-        percentageOfTarget: (retryWordCount / settings.wordCount * 100).toFixed(2) + '%'
-      });
-
-      if (Math.abs(retryWordCount - settings.wordCount) < Math.abs(wordCount - settings.wordCount)) {
-        console.log('Using retry content (closer to target word count)');
-        return {
-          content: retryContent,
-          wordCount: retryWordCount,
-          readingTime: Math.ceil(retryWordCount / 200),
-          settings: {
-            ...settings,
-            internalLinks: []
-          }
-        };
-      }
-    }
+    // Skip retry to avoid Heroku timeout - accept the content as-is
+    // The word count is close enough for most use cases
 
     // Calculate reading time (assuming 200 words per minute)
     const readingTime = Math.ceil(wordCount / 200);
