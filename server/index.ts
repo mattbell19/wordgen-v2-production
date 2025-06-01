@@ -341,6 +341,26 @@ app.post('/api/debug/echo', express.json(), (req, res) => {
   });
 });
 
+// Health check endpoint - MUST be before static file serving
+app.get('/api/health', (_req, res) => {
+  const hasRedis = !!process.env.REDIS_URL || !!process.env.REDIS_TLS_URL;
+  const sessionStore = hasRedis ? 'Redis' : 'Memory';
+
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    version: process.env.npm_package_version || '1.0.0',
+    sessionStore: sessionStore,
+    features: {
+      redis: hasRedis,
+      openai: !!process.env.OPENAI_API_KEY,
+      stripe: !!process.env.STRIPE_SECRET_KEY,
+      email: !!process.env.RESEND_API_KEY
+    }
+  });
+});
+
 // Register API routes (async)
 const httpServer = await registerRoutes(app);
 
@@ -362,26 +382,6 @@ httpServer.on('upgrade', (request, socket, head) => {
 
 // Add standardized error handling middleware
 app.use(errorHandler);
-
-// Health check endpoint
-app.get('/api/health', (_req, res) => {
-  const hasRedis = !!process.env.REDIS_URL || !!process.env.REDIS_TLS_URL;
-  const sessionStore = hasRedis ? 'Redis' : 'Memory';
-
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    version: process.env.npm_package_version || '1.0.0',
-    sessionStore: sessionStore,
-    features: {
-      redis: hasRedis,
-      openai: !!process.env.OPENAI_API_KEY,
-      stripe: !!process.env.STRIPE_SECRET_KEY,
-      email: !!process.env.RESEND_API_KEY
-    }
-  });
-});
 
   // Start the HTTP server
   const PORT = process.env.PORT || config.port;
