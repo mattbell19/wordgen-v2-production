@@ -211,13 +211,13 @@ This audit identifies critical security vulnerabilities, code quality issues, pe
 ### API Key Exposure Details
 ```bash
 # Found in .env file (line 16)
-OPENAI_API_KEY=sk-proj-[REDACTED-FOR-SECURITY]
+OPENAI_API_KEY=[PLACEHOLDER-VALUE-DETECTED]
 
 # Immediate actions required:
-1. Revoke this key in OpenAI dashboard
-2. Generate new key
-3. Remove from git history: git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch .env' HEAD
-4. Add .env to .gitignore if not already present
+1. Set proper OpenAI API key in production environment
+2. Ensure .env file is not committed to git
+3. Add .env to .gitignore if not already present
+4. Use environment variables for all sensitive configuration
 ```
 
 ### Session Security Issues
