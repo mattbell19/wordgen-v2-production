@@ -365,7 +365,7 @@ ${externalLinks.slice(0, 3).map(link => `  - Link to: ${link.url} with title: "$
       const startTime = Date.now();
 
       const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini', // Use faster model for better response times
+        model: 'gpt-3.5-turbo', // Use stable, fast model
         messages: [
           {
             role: 'system',
@@ -377,8 +377,7 @@ ${externalLinks.slice(0, 3).map(link => `  - Link to: ${link.url} with title: "$
           }
         ],
         temperature: 0.7,
-        max_tokens: 3000, // Reduced for faster response
-        timeout: 25000 // 25 second timeout to stay under Heroku's 30s limit
+        max_tokens: 2000 // Reduced for faster response
       });
 
       const endTime = Date.now();
