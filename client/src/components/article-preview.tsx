@@ -7,46 +7,60 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Import the dedicated article CSS
 import "@/styles/article.css";
 
-// Define enhanced styles for article preview
+// Define enhanced styles for article preview with premium typography
 const articleStyles = `
+  /* Base article container */
+  .article-content {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
   /* Main heading styles */
   .article-content h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
+    font-size: 2.75rem;
+    font-weight: 700;
     margin-bottom: 1.5rem;
-    color: #1a1a1a;
-    line-height: 1.2;
-    font-family: 'Sora', sans-serif;
+    color: #111827;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   /* Section heading styles */
   .article-content h2 {
-    font-size: 1.875rem;
-    font-weight: 700;
-    margin-top: 2.5rem;
-    margin-bottom: 1.25rem;
-    color: #2a2a2a;
-    line-height: 1.3;
-    font-family: 'Sora', sans-serif;
+    font-size: 2rem;
+    font-weight: 600;
+    margin-top: 3rem;
+    margin-bottom: 1.5rem;
+    color: #1f2937;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   /* Subsection heading styles */
   .article-content h3 {
     font-size: 1.5rem;
     font-weight: 600;
-    margin-top: 2rem;
+    margin-top: 2.5rem;
     margin-bottom: 1rem;
-    color: #3a3a3a;
-    line-height: 1.4;
-    font-family: 'Sora', sans-serif;
+    color: #374151;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
-  /* Paragraph styles */
+  /* Paragraph styles - Enhanced for readability */
   .article-content p {
-    margin-bottom: 1.25rem;
-    line-height: 1.75;
-    color: #333;
-    font-size: 1.05rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+    color: #374151;
+    font-size: 1.125rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
   }
 
   /* Table of Contents styles */
@@ -166,6 +180,13 @@ const articleStyles = `
     padding-left: 1.75rem;
   }
 
+  /* Enhanced list styles */
+  .article-content ul,
+  .article-content ol {
+    margin: 1.5rem 0;
+    padding-left: 1.5rem;
+  }
+
   .article-content ul {
     list-style-type: disc;
   }
@@ -176,21 +197,31 @@ const articleStyles = `
 
   .article-content li {
     margin-bottom: 0.75rem;
+    line-height: 1.6;
+    font-size: 1.125rem;
+    color: #374151;
   }
 
-  /* Link styles */
+  .article-content li::marker {
+    color: #6b7280;
+  }
+
+  /* Enhanced link styles */
   .article-content a {
-    color: #3b82f6;
-    text-decoration: underline;
-    transition: color 0.2s;
+    color: #2563eb;
+    text-decoration: none;
+    border-bottom: 1px solid #93c5fd;
+    transition: all 0.2s ease;
+    font-weight: 500;
   }
 
   .article-content a:hover {
-    color: #2563eb;
-    text-decoration: none;
+    color: #1d4ed8;
+    border-bottom-color: #2563eb;
+    background-color: rgba(37, 99, 235, 0.05);
   }
 
-  /* Emphasis styles */
+  /* Enhanced emphasis styles */
   .article-content strong {
     font-weight: 600;
     color: #111827;
@@ -201,13 +232,56 @@ const articleStyles = `
     color: #4b5563;
   }
 
-  /* Blockquote styles */
+  /* Enhanced blockquote styles */
   .article-content blockquote {
     border-left: 4px solid #3b82f6;
-    padding-left: 1rem;
-    margin: 1.5rem 0;
+    padding-left: 1.5rem;
+    margin: 2rem 0;
     color: #4b5563;
     font-style: italic;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    background-color: rgba(59, 130, 246, 0.05);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+  }
+
+  /* Responsive typography */
+  @media (max-width: 768px) {
+    .article-content h1 {
+      font-size: 2.25rem;
+      line-height: 1.2;
+    }
+
+    .article-content h2 {
+      font-size: 1.75rem;
+      margin-top: 2rem;
+    }
+
+    .article-content h3 {
+      font-size: 1.375rem;
+      margin-top: 1.5rem;
+    }
+
+    .article-content p,
+    .article-content li {
+      font-size: 1rem;
+      line-height: 1.65;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .article-content h1 {
+      font-size: 2rem;
+    }
+
+    .article-content h2 {
+      font-size: 1.5rem;
+    }
+
+    .article-content h3 {
+      font-size: 1.25rem;
+    }
   }
 `;
 
@@ -386,7 +460,7 @@ export function ArticlePreview({ article, isLoading = false }: ArticlePreviewPro
 
       {/* Article Content */}
       <div className="px-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           {article && renderContent(article.content)}
         </div>
       </div>
