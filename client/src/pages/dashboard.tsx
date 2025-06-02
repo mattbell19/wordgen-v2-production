@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,7 +65,7 @@ export default function Dashboard() {
     if (!isAuthLoading && !user) {
       navigate("/auth");
     }
-  }, [user, isAuthLoading, navigate]);
+  }, [user, isAuthLoading]); // Removed navigate from dependencies to prevent infinite loop
 
   if (isAuthLoading) {
     return (
@@ -381,9 +381,7 @@ function UsageStats() {
     queryKey: ['userUsage'],
     queryFn: async () => {
       try {
-        // First try to sync the usage data
-        await syncUsage.mutateAsync();
-        // Then fetch the updated usage data
+        // Just fetch the usage data directly to avoid infinite re-renders
         return await fetchJSON('/api/user/usage');
       } catch (error) {
         console.error('Error fetching usage data:', error);
@@ -402,6 +400,11 @@ function UsageStats() {
     staleTime: 300000, // 5 minutes
     retry: 1, // Only retry once
   });
+
+  // Trigger sync on component mount
+  useEffect(() => {
+    syncUsage.mutate();
+  }, []); // Empty dependency array to run only once on mount
 
   return (
     <LoadingState
