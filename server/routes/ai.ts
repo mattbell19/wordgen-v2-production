@@ -7,7 +7,6 @@ import type { ArticleCreationParams } from '../services/article.service';
 import type { WordGenerationParams } from '../services/word.service';
 import { requireAuth } from '../middlewares/authMiddleware';
 import ApiResponse from '../lib/api-response';
-// import { subscriptionMiddleware } from '../middleware/subscription';
 
 // Initialize router
 const router = Router();
