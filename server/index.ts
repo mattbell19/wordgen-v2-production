@@ -291,6 +291,11 @@ async function startServer() {
   initializeServices();
   scheduleCleanupTasks();
 
+  // Setup authentication FIRST (required for all other routes)
+  console.log('[SERVER] Setting up authentication...');
+  await setupAuth(app);
+  console.log('[SERVER] Authentication setup complete');
+
   // Register GSC auth direct route
   app.use('/api/gsc', gscAuthDirectRoute);
 
@@ -414,8 +419,8 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-// Register API routes (async)
-const httpServer = await registerRoutes(app);
+// Register API routes
+registerRoutes(app);
 
 // Serve static files in production AFTER API routes
 if (process.env.NODE_ENV === 'production') {
@@ -423,24 +428,22 @@ if (process.env.NODE_ENV === 'production') {
   serveStatic(app);
 }
 
-// Add WebSocket upgrade handling
-httpServer.on('upgrade', (request, socket, head) => {
-  console.log('[WS] Upgrade request received:', {
-    url: request.url,
-    headers: request.headers
-  });
-});
-
-// Note: Catch-all route for SPA is now handled by serveStatic function
-
 // Add standardized error handling middleware
 app.use(errorHandler);
 
   // Start the HTTP server
   const PORT = process.env.PORT || config.port;
-  httpServer.listen(PORT, () => {
+  const httpServer = app.listen(PORT, () => {
     console.log(`[Server] Server is running on port ${PORT}`);
     logger.info(`Server running on port ${PORT}`);
+  });
+
+  // Add WebSocket upgrade handling
+  httpServer.on('upgrade', (request, socket, head) => {
+    console.log('[WS] Upgrade request received:', {
+      url: request.url,
+      headers: request.headers
+    });
   });
 
   // Return the server instance for graceful shutdown

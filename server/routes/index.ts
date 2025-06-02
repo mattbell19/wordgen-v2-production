@@ -14,6 +14,7 @@ import gscDirectRoutes from './gsc-direct';
 import testRoutes from './test';
 import scrapingRoutes from './scraping';
 import bulkRoutes from './bulk';
+import { authRoutes } from './auth';
 
 // Configure passport local strategy
 export function registerRoutes(app: express.Express): void {
@@ -54,6 +55,11 @@ export function registerRoutes(app: express.Express): void {
 
   // Mount routes
   console.log('[ROUTES] Mounting routes under /api');
+
+  // Authentication routes (no prefix - they handle their own paths)
+  app.use('/api', authRoutes);
+
+  // Other API routes
   router.use('/articles', articleRoutes);
   router.use('/ai', aiRoutes);
   router.use('/ai-seo', aiSeoRoutes);
@@ -89,6 +95,9 @@ export function registerRoutes(app: express.Express): void {
   console.log('GET /health');
   console.log('GET /api/health');
   console.log('POST /api/csp-report');
+  console.log('POST /api/login');
+  console.log('POST /api/register');
+  console.log('POST /api/logout');
   console.log('GET /api/words/lists');
   console.log('POST /api/words/lists');
   console.log('POST /api/words/save');
