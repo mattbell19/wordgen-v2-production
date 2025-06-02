@@ -357,6 +357,11 @@ ${externalLinks.slice(0, 3).map(link => `  - Link to: ${link.url} with title: "$
     // Call OpenAI API with optimized settings for faster response
     try {
       console.log('Calling OpenAI API for article generation...');
+      console.log('API Key configured:', !!process.env.OPENAI_API_KEY);
+      console.log('API Key prefix:', process.env.OPENAI_API_KEY?.substring(0, 10) + '...');
+      console.log('Main topic:', mainTopic);
+      console.log('Word count:', wordCount);
+
       const startTime = Date.now();
 
       const response = await openai.chat.completions.create({
@@ -396,7 +401,13 @@ ${externalLinks.slice(0, 3).map(link => `  - Link to: ${link.url} with title: "$
 
       return content;
     } catch (apiError) {
-      console.error('Error calling OpenAI API, falling back to placeholder content:', apiError);
+      console.error('Error calling OpenAI API, falling back to placeholder content:', {
+        message: apiError.message,
+        status: apiError.status,
+        code: apiError.code,
+        type: apiError.type,
+        stack: apiError.stack
+      });
 
       // Fall back to placeholder content in case of API error
       const fallbackContent = `
