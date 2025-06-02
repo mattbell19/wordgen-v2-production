@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { ArticleResponse } from "@/lib/types";
-import { Download, Loader2, Eye, Clock, FileText, Copy, Share, BarChart3, Hash } from "lucide-react";
+import { Download, Loader2, Eye, Clock, FileText, Copy, Share, BarChart3, Hash, Award } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { QualityMetricsDisplay } from "./quality-metrics-display";
 
 // Import the dedicated article CSS
 import "@/styles/article.css";
@@ -435,6 +436,12 @@ export function ArticlePreview({ article, isLoading = false }: ArticlePreviewPro
               <FileText className="h-4 w-4 mr-1" />
               {article?.wordCount || 1750} words
             </div>
+            {article?.qualityMetrics && (
+              <div className="flex items-center text-sm text-green-600 bg-green-50 px-2 py-1 rounded">
+                <Award className="h-4 w-4 mr-1" />
+                Quality: {Math.round(article.qualityMetrics.overall_score)}/100
+              </div>
+            )}
           </div>
 
           <div className="flex space-x-2">
@@ -457,6 +464,19 @@ export function ArticlePreview({ article, isLoading = false }: ArticlePreviewPro
           </div>
         </div>
       </div>
+
+      {/* Quality Metrics */}
+      {article?.qualityMetrics && (
+        <div className="px-6 mb-6">
+          <div className="max-w-3xl mx-auto">
+            <QualityMetricsDisplay
+              metrics={article.qualityMetrics}
+              expertPersona={article.expertPersona}
+              industry={article.industry}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Article Content */}
       <div className="px-6">

@@ -1,6 +1,9 @@
 import OpenAI from 'openai';
 import type { ArticleSettings, ArticleResponse } from '@/lib/types';
 import { ExternalLinkService } from "./external-link.service";
+import ExpertPersonasService, { type IndustryContext } from './expert-personas.service';
+import ContentQualityService from './content-quality.service';
+import RealTimeDataService, { type RealTimeContext } from './real-time-data.service';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -23,8 +26,81 @@ function countWords(text: string): number {
   return cleanText.split(' ').filter(word => word.length > 0).length;
 }
 
+// Helper function to infer industry from keyword
+function inferIndustryFromKeyword(keyword: string): string {
+  const lowerKeyword = keyword.toLowerCase();
+
+  // AI/Tech keywords
+  if (lowerKeyword.includes('ai') || lowerKeyword.includes('artificial intelligence') ||
+      lowerKeyword.includes('machine learning') || lowerKeyword.includes('automation') ||
+      lowerKeyword.includes('software') || lowerKeyword.includes('saas') ||
+      lowerKeyword.includes('tech') || lowerKeyword.includes('api')) {
+    return 'ai_saas';
+  }
+
+  // Finance keywords
+  if (lowerKeyword.includes('finance') || lowerKeyword.includes('investment') ||
+      lowerKeyword.includes('money') || lowerKeyword.includes('tax') ||
+      lowerKeyword.includes('loan') || lowerKeyword.includes('credit') ||
+      lowerKeyword.includes('banking') || lowerKeyword.includes('insurance')) {
+    return 'finance';
+  }
+
+  // Marketing keywords
+  if (lowerKeyword.includes('marketing') || lowerKeyword.includes('seo') ||
+      lowerKeyword.includes('advertising') || lowerKeyword.includes('social media') ||
+      lowerKeyword.includes('content') || lowerKeyword.includes('brand')) {
+    return 'marketing';
+  }
+
+  // E-commerce keywords
+  if (lowerKeyword.includes('ecommerce') || lowerKeyword.includes('e-commerce') ||
+      lowerKeyword.includes('online store') || lowerKeyword.includes('shopify') ||
+      lowerKeyword.includes('amazon') || lowerKeyword.includes('retail')) {
+    return 'ecommerce';
+  }
+
+  // Healthcare keywords
+  if (lowerKeyword.includes('health') || lowerKeyword.includes('medical') ||
+      lowerKeyword.includes('doctor') || lowerKeyword.includes('patient') ||
+      lowerKeyword.includes('hospital') || lowerKeyword.includes('treatment')) {
+    return 'healthcare';
+  }
+
+  // Default to marketing for general business topics
+  return 'marketing';
+}
+
 export async function generateArticleWithGPT(settings: ArticleSettings): Promise<ArticleResponse> {
-  console.log('Generating article with GPT using settings:', settings);
+  console.log('🚀 Generating enhanced article with expert prompts:', settings);
+
+  // Determine industry context
+  const industryContext: IndustryContext = {
+    industry: settings.industry || inferIndustryFromKeyword(settings.keyword),
+    targetAudience: settings.targetAudience || settings.tone,
+    contentType: settings.contentType || 'guide',
+    businessStage: 'growth'
+  };
+
+  console.log('📊 Industry context determined:', industryContext);
+
+  // Get expert persona for this industry
+  const expertPersona = ExpertPersonasService.getExpertPersona(industryContext);
+  console.log('👨‍💼 Expert persona selected:', expertPersona.name);
+
+  // Get real-time context data
+  let realTimeContext: RealTimeContext;
+  try {
+    realTimeContext = await RealTimeDataService.getRealTimeContext(
+      settings.keyword,
+      industryContext.industry,
+      industryContext.targetAudience
+    );
+    console.log('📈 Real-time data fetched successfully');
+  } catch (error) {
+    console.warn('⚠️ Failed to fetch real-time data, using defaults:', error);
+    realTimeContext = await RealTimeDataService.getRealTimeContext(settings.keyword, industryContext.industry);
+  }
 
   // Calculate word distribution
   const introWords = Math.floor(settings.wordCount * 0.15); // 15% for intro
@@ -37,36 +113,86 @@ export async function generateArticleWithGPT(settings: ArticleSettings): Promise
   if (settings.enableExternalLinking) {
     try {
       externalLinks = await externalLinkService.findLinkingOpportunities(settings.keyword);
-      console.log('Found external linking opportunities:', externalLinks);
+      console.log('🔗 Found external linking opportunities:', externalLinks.length);
     } catch (error) {
-      console.warn('Failed to fetch external links:', error);
+      console.warn('⚠️ Failed to fetch external links:', error);
     }
   }
 
-  const systemPrompt = `You are an expert content writer for Money Saving Expert, known for making complex topics simple and engaging. Your task is to write a high-quality article that combines SEO optimization with genuinely helpful, easy-to-read content.
+  // Generate enhanced system prompt with expert persona
+  const expertIntro = ExpertPersonasService.generateExpertIntro(expertPersona, settings.keyword);
+  const realTimeDataPrompt = RealTimeDataService.formatForPrompt(realTimeContext);
+  const industryTerminology = ExpertPersonasService.getIndustryTerminology(industryContext.industry);
+  const commonMistakes = ExpertPersonasService.getCommonMistakes(industryContext.industry);
+  const successMetrics = ExpertPersonasService.getSuccessMetrics(industryContext.industry);
 
-Key Requirements:
-1. Write in a friendly, conversational tone like you're explaining to a friend
-2. Use short, clear sentences (max 15-20 words)
-3. Break complex ideas into simple steps or bullet points
-4. Start each section with its most interesting or surprising point
-5. Format content in clean HTML:
+  const systemPrompt = `${expertIntro}
+
+**EXPERT PERSONA & CREDENTIALS:**
+- Name: ${expertPersona.name}
+- Expertise: ${expertPersona.expertise}
+- Experience: ${expertPersona.experience}
+- Writing Style: ${expertPersona.writingStyle}
+
+**CONTENT QUALITY REQUIREMENTS (Target Score: 85+/100):**
+
+1. **Expert Authority (Target: 85+)**
+   - Include specific credentials and experience markers
+   - Reference real case studies and examples from your experience
+   - Use industry-specific terminology: ${industryTerminology.slice(0, 5).join(', ')}
+   - Cite specific metrics, ROI data, and performance statistics
+   - Include quotes or insights from industry leaders
+
+2. **Actionability (Target: 85+)**
+   - Provide step-by-step implementation guides
+   - Include specific tools and resources: ${expertPersona.credibilityMarkers.slice(0, 3).join(', ')}
+   - Add downloadable templates or checklists
+   - Give concrete next steps and action items
+   - Include implementation timelines and milestones
+
+3. **Specificity (Target: 85+)**
+   - Use specific numbers, percentages, and dollar amounts
+   - Name real companies and case studies
+   - Include exact timeframes and deadlines
+   - Provide specific tool recommendations with versions
+   - Avoid vague language like "many," "some," "often"
+
+4. **Current Relevance (Target: 85+)**
+   - Reference 2024 trends and developments
+   - Include latest industry statistics and data
+   - Mention recent events and market changes
+   - Use current examples and case studies
+   - Address emerging challenges and opportunities
+
+5. **Content Structure & Format:**
    - Main title: <h1>Title Here</h1>
    - Major sections: <h2>Section Title</h2>
    - Subsections: <h3>Subsection Title</h3>
    - Paragraphs: <p>Content here</p>
    - Lists: <ul><li>Item</li></ul> or <ol><li>Item</li></ol>
-   - Use regular paragraphs for all content including key points and statistics
-   - Image suggestions: <div class="image-suggestion"><p>Suggestion here</p></div>
+   - Tables for data: <table><tr><th>Header</th></tr><tr><td>Data</td></tr></table>
    - External links: <a href="url" target="_blank" rel="noopener noreferrer">anchor text</a>
-6. Maintain word count distribution without showing markers:
+
+6. **Word Count Distribution:**
    - Introduction: ${introWords} words
    - Main Content: ${mainContentWords} words
    - Conclusion: ${conclusionWords} words
    - References: ${referencesWords} words
 
+**MANDATORY CONTENT SECTIONS:**
+1. **Expert Introduction** - Establish credibility immediately
+2. **Current Market Context** - Include 2024 data and trends
+3. **Common Mistakes Section** - Address these specific mistakes: ${commonMistakes.slice(0, 3).join(', ')}
+4. **Success Metrics & ROI** - Include these metrics: ${successMetrics.slice(0, 3).join(', ')}
+5. **Step-by-Step Implementation Guide** - Actionable steps with timelines
+6. **Tools & Resources Section** - Specific recommendations with links
+7. **Real-World Examples** - At least 3 specific case studies
+8. **Future Trends & Predictions** - What's coming next in ${industryContext.industry}
+
+${realTimeDataPrompt}
+
 ${externalLinks.length > 0 ? `
-7. Include the following external links naturally in your content:
+**EXTERNAL LINKS TO INCLUDE:**
 ${externalLinks.map(link => `   - ${link.title} (${link.url})
      Snippet: ${link.snippet}`).join('\n')}
 
@@ -120,35 +246,127 @@ Write the complete article now.`
       max_tokens: 4000
     });
 
-    const content = response.choices[0]?.message?.content;
+    let content = response.choices[0]?.message?.content;
 
     if (!content) {
       throw new Error('No content received from GPT');
     }
 
+    console.log('✅ Initial content generated, analyzing quality...');
+
+    // Analyze content quality
+    const qualityAnalysis = await ContentQualityService.analyzeContentQuality(
+      content,
+      [settings.keyword],
+      industryContext.industry,
+      industryContext.targetAudience
+    );
+
+    console.log('📊 Quality Analysis Results:', {
+      overall_score: qualityAnalysis.metrics.overall_score,
+      expert_authority: qualityAnalysis.metrics.expert_authority,
+      actionability: qualityAnalysis.metrics.actionability,
+      specificity: qualityAnalysis.metrics.specificity,
+      current_relevance: qualityAnalysis.metrics.current_relevance
+    });
+
+    // Check if content meets quality threshold (80+)
+    if (!ContentQualityService.meetsQualityThreshold(qualityAnalysis)) {
+      console.log('⚠️ Content quality below threshold, attempting improvement...');
+
+      // Generate improvement prompt
+      const improvementPrompt = `
+**CONTENT QUALITY IMPROVEMENT REQUIRED**
+
+Current Quality Score: ${qualityAnalysis.metrics.overall_score}/100 (Target: 80+)
+
+**Issues Identified:**
+${qualityAnalysis.weaknesses.map(weakness => `- ${weakness}`).join('\n')}
+
+**Missing Elements:**
+${qualityAnalysis.missing_elements.map(element => `- ${element}`).join('\n')}
+
+**Improvement Recommendations:**
+${qualityAnalysis.recommendations.map(rec => `- ${rec}`).join('\n')}
+
+**INSTRUCTIONS:**
+Rewrite the content to address ALL the issues above. Focus on:
+1. Adding specific examples and case studies
+2. Including concrete data and statistics
+3. Providing actionable implementation steps
+4. Establishing expert authority with credentials
+5. Adding current 2024 trends and data
+
+Maintain the same structure but significantly enhance the quality and depth.
+      `;
+
+      try {
+        const improvementResponse = await openai.chat.completions.create({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            {
+              role: 'user',
+              content: improvementPrompt
+            },
+            {
+              role: 'assistant',
+              content: content
+            },
+            {
+              role: 'user',
+              content: 'Please improve this content based on the feedback above.'
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 4000
+        });
+
+        const improvedContent = improvementResponse.choices[0]?.message?.content;
+        if (improvedContent) {
+          content = improvedContent;
+          console.log('✅ Content improved successfully');
+
+          // Re-analyze improved content
+          const improvedAnalysis = await ContentQualityService.analyzeContentQuality(
+            content,
+            [settings.keyword],
+            industryContext.industry,
+            industryContext.targetAudience
+          );
+
+          console.log('📈 Improved Quality Score:', improvedAnalysis.metrics.overall_score);
+        }
+      } catch (error) {
+        console.warn('⚠️ Content improvement failed, using original:', error);
+      }
+    } else {
+      console.log('✅ Content quality meets threshold!');
+    }
+
     // Calculate actual word count
     const wordCount = countWords(content);
-    console.log('Word count analysis:', {
+    console.log('📝 Final word count analysis:', {
       requested: settings.wordCount,
       actual: wordCount,
       difference: Math.abs(wordCount - settings.wordCount),
-      percentageOfTarget: (wordCount / settings.wordCount * 100).toFixed(2) + '%'
+      percentageOfTarget: (wordCount / settings.wordCount * 100).toFixed(2) + '%',
+      qualityScore: qualityAnalysis.metrics.overall_score
     });
-
-    // More lenient tolerance to avoid timeout issues - allow 20% deviation
-    const tolerance = Math.floor(settings.wordCount * 0.2);
-    console.log('Word count tolerance check:', {
-      requested: settings.wordCount,
-      actual: wordCount,
-      tolerance: tolerance,
-      withinRange: Math.abs(wordCount - settings.wordCount) <= tolerance
-    });
-
-    // Skip retry to avoid Heroku timeout - accept the content as-is
-    // The word count is close enough for most use cases
 
     // Calculate reading time (assuming 200 words per minute)
     const readingTime = Math.ceil(wordCount / 200);
+
+    console.log('🎉 Enhanced article generation complete!', {
+      expertPersona: expertPersona.name,
+      industry: industryContext.industry,
+      qualityScore: qualityAnalysis.metrics.overall_score,
+      wordCount,
+      readingTime
+    });
 
     return {
       content,
@@ -157,7 +375,17 @@ Write the complete article now.`
       settings: {
         ...settings,
         internalLinks: []
-      }
+      },
+      qualityMetrics: {
+        overall_score: qualityAnalysis.metrics.overall_score,
+        expert_authority: qualityAnalysis.metrics.expert_authority,
+        actionability: qualityAnalysis.metrics.actionability,
+        specificity: qualityAnalysis.metrics.specificity,
+        current_relevance: qualityAnalysis.metrics.current_relevance,
+        engagement: qualityAnalysis.metrics.engagement
+      },
+      expertPersona: expertPersona.name,
+      industry: industryContext.industry
     };
 
   } catch (error) {

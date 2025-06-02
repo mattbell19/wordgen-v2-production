@@ -13,13 +13,29 @@ export interface ArticleSettings {
   enableExternalLinking?: boolean; // Whether to enable external linking
   userId?: number;  // Added for internal linking functionality
   callToAction?: string; // Optional call to action text
+  language?: string; // Content language
+  industry?: string;  // Industry context for expert personas
+  targetAudience?: string;  // Target audience specification
+  contentType?: string;  // Type of content (guide, comparison, analysis, etc.)
+}
+
+export interface QualityMetrics {
+  overall_score: number;
+  expert_authority: number;
+  actionability: number;
+  specificity: number;
+  current_relevance: number;
+  engagement: number;
 }
 
 export interface ArticleResponse {
   content: string;
   wordCount: number;
   readingTime: number;
-  settings: ArticleSettings; 
+  settings: ArticleSettings;
+  qualityMetrics?: QualityMetrics;
+  expertPersona?: string;
+  industry?: string;
 }
 
 export type ArticleGenerationStatus = 'idle' | 'generating' | 'humanizing' | 'complete' | 'error';

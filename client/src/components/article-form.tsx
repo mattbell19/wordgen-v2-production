@@ -4,10 +4,11 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArticleResponse } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, AlertCircle, Search, Settings2 } from "lucide-react";
+import { Loader2, AlertCircle, Search, Settings2, Target } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArticleSettingsDialog } from "./article-settings-dialog";
 import { useArticleSettings } from "@/hooks/use-article-settings";
@@ -27,6 +28,8 @@ interface User {
 
 const formSchema = z.object({
   keyword: z.string().min(2).max(100),
+  industry: z.string().optional(),
+  contentType: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -65,6 +68,8 @@ export function ArticleForm({ onArticleGenerated }: ArticleFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       keyword: "",
+      industry: "marketing",
+      contentType: "guide",
     },
   });
 
@@ -90,6 +95,9 @@ export function ArticleForm({ onArticleGenerated }: ArticleFormProps) {
         userId: user.id,
         language: settings.language,
         callToAction: settings.callToAction,
+        industry: formData.industry || "marketing",
+        targetAudience: settings.writingStyle,
+        contentType: formData.contentType || "guide",
       };
 
       console.log('Sending article generation request:', requestBody);
@@ -288,6 +296,65 @@ export function ArticleForm({ onArticleGenerated }: ArticleFormProps) {
               </FormItem>
             )}
           />
+
+          {/* Industry and Content Type Selection */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="industry"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">Industry</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="border-2 border-gray-200 focus:border-purple-500">
+                        <SelectValue placeholder="Select industry" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="ai_saas">AI & SaaS</SelectItem>
+                      <SelectItem value="finance">Finance & Fintech</SelectItem>
+                      <SelectItem value="marketing">Marketing & Growth</SelectItem>
+                      <SelectItem value="ecommerce">E-commerce & Retail</SelectItem>
+                      <SelectItem value="healthcare">Healthcare & Medical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription className="text-xs text-gray-500">
+                    Choose your industry for expert-level content
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="contentType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">Content Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="border-2 border-gray-200 focus:border-purple-500">
+                        <SelectValue placeholder="Select content type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="guide">How-to Guide</SelectItem>
+                      <SelectItem value="comparison">Comparison Article</SelectItem>
+                      <SelectItem value="analysis">Industry Analysis</SelectItem>
+                      <SelectItem value="review">Product Review</SelectItem>
+                      <SelectItem value="listicle">List Article</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription className="text-xs text-gray-500">
+                    Choose the type of content to generate
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           {/* Generate Button */}
           <Button
