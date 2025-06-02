@@ -10,6 +10,15 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Validate OpenAI API key
+function validateOpenAIKey(): void {
+  if (!process.env.OPENAI_API_KEY ||
+      process.env.OPENAI_API_KEY === 'your_openai_api_key_here' ||
+      process.env.OPENAI_API_KEY.length < 10) {
+    throw new Error('OpenAI API key is not properly configured. Please set a valid OPENAI_API_KEY environment variable.');
+  }
+}
+
 const externalLinkService = new ExternalLinkService();
 
 // Accurate word counting function
@@ -73,6 +82,27 @@ function inferIndustryFromKeyword(keyword: string): string {
 
 export async function generateArticleWithGPT(settings: ArticleSettings): Promise<ArticleResponse> {
   console.log('🚀 Generating enhanced article with expert prompts:', settings);
+
+  // Validate OpenAI API key first
+  try {
+    validateOpenAIKey();
+  } catch (error: any) {
+    console.error('OpenAI API key validation failed:', error.message);
+    throw new Error('AI service is not properly configured. Please contact support.');
+  }
+
+  // Validate required settings
+  if (!settings.keyword) {
+    throw new Error('Invalid settings: keyword is required');
+  }
+
+  if (!settings.wordCount || settings.wordCount < 100 || settings.wordCount > 5000) {
+    throw new Error('Invalid settings: wordCount must be between 100 and 5000');
+  }
+
+  if (!settings.tone) {
+    throw new Error('Invalid settings: tone is required');
+  }
 
   // Determine industry context
   const industryContext: IndustryContext = {
@@ -213,7 +243,8 @@ IMPORTANT:
 
   try {
     console.log('Sending request to GPT with prompt length:', systemPrompt.length);
-    
+    console.log('Using OpenAI API key:', process.env.OPENAI_API_KEY ? `${process.env.OPENAI_API_KEY.substring(0, 10)}...` : 'NOT SET');
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -388,8 +419,27 @@ Maintain the same structure but significantly enhance the quality and depth.
       industry: industryContext.industry
     };
 
-  } catch (error) {
-    console.error('Error generating article with GPT:', error);
-    throw error;
+  } catch (error: any) {
+    console.error('Error generating article with GPT:', {
+      message: error.message,
+      status: error.status,
+      code: error.code,
+      type: error.type
+    });
+
+    // Provide more specific error messages
+    if (error.status === 400) {
+      throw new Error('Invalid request to AI service. Please check your input parameters.');
+    } else if (error.status === 401) {
+      throw new Error('AI service authentication failed. Please check API configuration.');
+    } else if (error.status === 429) {
+      throw new Error('AI service rate limit exceeded. Please try again later.');
+    } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+      throw new Error('Unable to connect to AI service. Please try again later.');
+    } else if (error.message?.includes('timeout')) {
+      throw new Error('AI service request timed out. Please try again with a shorter word count.');
+    } else {
+      throw new Error(`AI service error: ${error.message || 'Unknown error occurred'}`);
+    }
   }
 } 
