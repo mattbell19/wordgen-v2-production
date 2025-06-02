@@ -23,7 +23,7 @@ const articleStyles = `
     font-size: 2.75rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
-    color: #111827;
+    color: #000000;
     line-height: 1.1;
     letter-spacing: -0.025em;
     font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -35,7 +35,7 @@ const articleStyles = `
     font-weight: 600;
     margin-top: 3rem;
     margin-bottom: 1.5rem;
-    color: #1f2937;
+    color: #000000;
     line-height: 1.25;
     letter-spacing: -0.015em;
     font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -47,7 +47,7 @@ const articleStyles = `
     font-weight: 600;
     margin-top: 2.5rem;
     margin-bottom: 1rem;
-    color: #374151;
+    color: #000000;
     line-height: 1.35;
     letter-spacing: -0.01em;
     font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
