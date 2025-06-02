@@ -115,16 +115,17 @@ router.get('/keywords', requireAuth, async (req: Request, res: Response) => {
       .groupBy(sql`DATE_TRUNC('month', ${keywordLists.createdAt})`)
       .orderBy(sql`DATE_TRUNC('month', ${keywordLists.createdAt})`);
 
-    // Get saved keywords count by month
+    // Get saved keywords count by month (join with keywordLists to filter by userId)
     const monthlySavedKeywords = await db
       .select({
         month: sql<string>`DATE_TRUNC('month', ${savedKeywords.createdAt})`,
         count: sql<number>`COUNT(*)::int`
       })
       .from(savedKeywords)
+      .innerJoin(keywordLists, eq(savedKeywords.listId, keywordLists.id))
       .where(
         and(
-          eq(savedKeywords.userId, userId),
+          eq(keywordLists.userId, userId),
           gte(savedKeywords.createdAt, twelveMonthsAgo)
         )
       )
@@ -168,7 +169,8 @@ router.get('/keywords', requireAuth, async (req: Request, res: Response) => {
         count: sql<number>`COUNT(*)::int`
       })
       .from(savedKeywords)
-      .where(eq(savedKeywords.userId, userId));
+      .innerJoin(keywordLists, eq(savedKeywords.listId, keywordLists.id))
+      .where(eq(keywordLists.userId, userId));
 
     const totalLists = totalKeywordLists[0]?.count || 0;
     const totalKeywords = totalSavedKeywords[0]?.count || 0;
