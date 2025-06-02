@@ -65,7 +65,30 @@ router.post('/article/generate',
         requestBody.tone = 'professional'; // Default tone
       }
 
+      // Validate and set defaults for additional fields
+      if (!requestBody.industry) {
+        requestBody.industry = 'marketing'; // Default industry
+      }
+
+      if (!requestBody.targetAudience) {
+        requestBody.targetAudience = requestBody.tone; // Use tone as default target audience
+      }
+
+      if (!requestBody.contentType) {
+        requestBody.contentType = 'guide'; // Default content type
+      }
+
       console.log('[Article Generation] Starting generation for user:', req.user.id, 'keyword:', requestBody.keyword);
+      console.log('[Article Generation] Full request parameters:', {
+        keyword: requestBody.keyword,
+        wordCount: requestBody.wordCount,
+        tone: requestBody.tone,
+        industry: requestBody.industry,
+        targetAudience: requestBody.targetAudience,
+        contentType: requestBody.contentType,
+        enableInternalLinking: requestBody.enableInternalLinking,
+        enableExternalLinking: requestBody.enableExternalLinking
+      });
 
       try {
         // Add user ID from authentication

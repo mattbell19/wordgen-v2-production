@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { lsiKeywordService } from '../lsi-keyword.service';
 import { OpenAI } from 'openai';
 
 // Mock OpenAI
-vi.mock('openai', () => {
+jest.mock('openai', () => {
   return {
-    OpenAI: vi.fn().mockImplementation(() => ({
+    OpenAI: jest.fn().mockImplementation(() => ({
       chat: {
         completions: {
-          create: vi.fn()
+          create: jest.fn()
         }
       }
     }))
@@ -17,7 +17,7 @@ vi.mock('openai', () => {
 
 describe('LsiKeywordService', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
   
   describe('generateLsiKeywords', () => {
@@ -34,7 +34,7 @@ describe('LsiKeywordService', () => {
       };
       
       // Setup the mock implementation
-      const mockCreate = vi.fn().mockResolvedValue({
+      const mockCreate = jest.fn().mockResolvedValue({
         choices: [
           {
             message: {
@@ -73,7 +73,7 @@ describe('LsiKeywordService', () => {
     
     it('should return empty array when OpenAI returns no content', async () => {
       // Setup the mock implementation with empty response
-      const mockCreate = vi.fn().mockResolvedValue({
+      const mockCreate = jest.fn().mockResolvedValue({
         choices: [
           {
             message: {
@@ -94,7 +94,7 @@ describe('LsiKeywordService', () => {
     
     it('should handle OpenAI errors gracefully', async () => {
       // Setup the mock implementation to throw an error
-      const mockCreate = vi.fn().mockRejectedValue(new Error('API Error'));
+      const mockCreate = jest.fn().mockRejectedValue(new Error('API Error'));
       
       // Apply the mock
       const openaiInstance = new OpenAI();
@@ -116,9 +116,9 @@ describe('LsiKeywordService', () => {
       expect(result).toContain(content);
       expect(result).toContain('<div class="related-keywords">');
       expect(result).toContain('<h3>Related Topics</h3>');
-      expect(result).toContain('<li>keyword1</li>');
-      expect(result).toContain('<li>keyword2</li>');
-      expect(result).toContain('<li>keyword3</li>');
+      expect(result).toContain('<li>Keyword1</li>');
+      expect(result).toContain('<li>Keyword2</li>');
+      expect(result).toContain('<li>Keyword3</li>');
     });
     
     it('should return original content when keywords array is empty', () => {

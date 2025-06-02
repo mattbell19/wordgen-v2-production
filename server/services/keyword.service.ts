@@ -1,12 +1,12 @@
 import axios from 'axios';
 import type { KeywordResearchResult } from "@/lib/types";
 import { db } from '../db';
-import { savedKeywords } from '../../db/schema';
+import { keywordLists } from '../../db/schema';
 import type { InferModel } from 'drizzle-orm';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-type Keyword = InferModel<typeof keywords>;
+type Keyword = InferModel<typeof keywordLists>;
 
 // Debug environment variables at service initialization
 if (isDevelopment) {
@@ -118,13 +118,10 @@ export async function createKeyword(data: {
   userId: number;
   teamId?: number;
 }): Promise<Keyword> {
-  const [keyword] = await db.insert(keywords)
+  const [keyword] = await db.insert(keywordLists)
     .values({
       name: data.name,
-      keywords: data.keywords,
-      source: data.source,
       userId: data.userId,
-      teamId: data.teamId,
       createdAt: new Date(),
       updatedAt: new Date(),
     })

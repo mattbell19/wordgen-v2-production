@@ -1,8 +1,9 @@
-import { generateArticle as generateArticleInternal } from '../lib/gpt-client';
+import { generateArticleWithGPT } from './openai.service';
 import { schemaMarkupService } from './schema-markup.service';
 import { tocGeneratorService } from './toc-generator.service';
 import { faqGeneratorService } from './faq-generator.service';
 import { lsiKeywordService } from './lsi-keyword.service';
+import type { ArticleSettings } from '../../client/src/lib/types';
 
 export interface ArticleStructureSections {
   whatIs?: boolean;
@@ -59,13 +60,27 @@ export interface ArticleCreationParams {
   title?: string;
   callToAction?: string;
   structure?: ArticleStructure;
+  // Additional fields from frontend
+  industry?: string;
+  targetAudience?: string;
+  contentType?: string;
 }
 
 export interface ArticleResponse {
   content: string;
   wordCount: number;
   readingTime: number;
-  settings: ArticleCreationParams;
+  settings: ArticleSettings;
+  qualityMetrics?: {
+    overall_score: number;
+    expert_authority: number;
+    actionability: number;
+    specificity: number;
+    current_relevance: number;
+    engagement: number;
+  };
+  expertPersona?: string;
+  industry?: string;
 }
 
 export interface Article {
@@ -85,16 +100,40 @@ export interface ArticleServiceResponse {
 
 export async function generateArticle(params: ArticleCreationParams): Promise<ArticleResponse> {
   try {
-    const content = await generateArticleInternal({
-      ...params,
-      title: params.keyword || params.title || '',
-    });
+    // Validate required parameters
+    if (!params.keyword) {
+      throw new Error('Keyword is required for article generation');
+    }
 
-    const wordCount = params.wordCount || 0;
+    if (!params.wordCount || params.wordCount < 100 || params.wordCount > 5000) {
+      throw new Error('Word count must be between 100 and 5000');
+    }
+
+    // Convert ArticleCreationParams to ArticleSettings for the OpenAI service
+    const articleSettings: ArticleSettings = {
+      keyword: params.keyword,
+      tone: (params.tone as 'professional' | 'casual' | 'friendly') || 'professional',
+      wordCount: params.wordCount,
+      enableInternalLinking: params.enableInternalLinking || false,
+      enableExternalLinking: params.enableExternalLinking || false,
+      userId: params.userId,
+      callToAction: params.callToAction,
+      language: params.language || 'english',
+      industry: params.industry || 'marketing',
+      targetAudience: params.targetAudience || params.tone || 'general',
+      contentType: params.contentType || 'guide'
+    };
+
+    console.log('Generating article with enhanced OpenAI service:', articleSettings);
+
+    // Use the enhanced OpenAI service
+    const result = await generateArticleWithGPT(articleSettings);
+
+    const wordCount = result.wordCount || params.wordCount || 0;
     const readingTime = Math.ceil(wordCount / 200);
 
     // Generate table of contents
-    const { toc, content: contentWithToc } = tocGeneratorService.generateTableOfContents(content);
+    const { toc, content: contentWithToc } = tocGeneratorService.generateTableOfContents(result.content);
 
     // Insert TOC after the first heading (h1) if it exists
     let enhancedContent = contentWithToc;
@@ -164,14 +203,15 @@ export async function generateArticle(params: ArticleCreationParams): Promise<Ar
       }
     }
 
-    // Create the article response object
+    // Create the article response object with enhanced data
     const articleResponse: ArticleResponse = {
       content: enhancedContent,
       wordCount,
       readingTime,
-      settings: {
-        ...params
-      }
+      settings: articleSettings,
+      qualityMetrics: result.qualityMetrics,
+      expertPersona: result.expertPersona,
+      industry: result.industry
     };
 
     // Generate schema markup and append it to the content
