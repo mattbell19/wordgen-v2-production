@@ -15,26 +15,29 @@ import { useToast } from "@/hooks/use-toast";
 import { LoadingState } from "@/components/ui/loading-state";
 import { UsageStat } from "@/components/dashboard/usage-stat";
 
-// Demo data for when real data is not available
-const articleData = [
-  { name: "Jan", articles: 12, words: 18500 },
-  { name: "Feb", articles: 18, words: 27200 },
-  { name: "Mar", articles: 23, words: 34800 },
-  { name: "Apr", articles: 27, words: 41300 },
-  { name: "May", articles: 34, words: 52100 },
-  { name: "Jun", articles: 28, words: 43600 },
-  { name: "Jul", articles: 31, words: 47800 },
-];
+// Interface for chart data
+interface ChartDataPoint {
+  name: string;
+  articles?: number;
+  words?: number;
+  keywords?: number;
+  searches?: number;
+  date: string;
+}
 
-const keywordData = [
-  { name: "Jan", keywords: 45, searches: 120 },
-  { name: "Feb", keywords: 62, searches: 180 },
-  { name: "Mar", keywords: 78, searches: 210 },
-  { name: "Apr", keywords: 89, searches: 245 },
-  { name: "May", keywords: 95, searches: 280 },
-  { name: "Jun", keywords: 87, searches: 260 },
-  { name: "Jul", keywords: 92, searches: 275 },
-];
+interface ArticleAnalytics {
+  chartData: ChartDataPoint[];
+  totalArticles: number;
+  totalWords: number;
+  hasData: boolean;
+}
+
+interface KeywordAnalytics {
+  chartData: ChartDataPoint[];
+  totalKeywordLists: number;
+  totalSavedKeywords: number;
+  hasData: boolean;
+}
 
 interface UserUsage {
   totalArticlesGenerated: number;
@@ -78,6 +81,28 @@ export default function Dashboard() {
   if (!user) {
     return null;
   }
+
+  // Query for article analytics
+  const { data: articleAnalytics, isLoading: isLoadingArticles } = useQuery<ArticleAnalytics>({
+    queryKey: ['dashboard-articles'],
+    queryFn: async () => {
+      const response = await fetchJSON('/api/dashboard/articles');
+      return response;
+    },
+    staleTime: 300000, // 5 minutes
+    retry: 1,
+  });
+
+  // Query for keyword analytics
+  const { data: keywordAnalytics, isLoading: isLoadingKeywords } = useQuery<KeywordAnalytics>({
+    queryKey: ['dashboard-keywords'],
+    queryFn: async () => {
+      const response = await fetchJSON('/api/dashboard/keywords');
+      return response;
+    },
+    staleTime: 300000, // 5 minutes
+    retry: 1,
+  });
 
   return (
     <div className="container mx-auto p-4 space-y-8">
@@ -137,43 +162,67 @@ export default function Dashboard() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={280}>
-                    <AreaChart data={articleData}>
-                      <defs>
-                        <linearGradient id="articleGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.05}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
-                      <XAxis
-                        dataKey="name"
-                        axisLine={false}
-                        tickLine={false}
-                        className="text-xs"
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        className="text-xs"
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--background))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                        }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="articles"
-                        stroke="#8b5cf6"
-                        strokeWidth={2}
-                        fill="url(#articleGradient)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                  {isLoadingArticles ? (
+                    <div className="flex items-center justify-center h-[280px]">
+                      <div className="flex flex-col items-center gap-2">
+                        <RefreshCw className="h-6 w-6 animate-spin text-purple-600" />
+                        <p className="text-sm text-muted-foreground">Loading article data...</p>
+                      </div>
+                    </div>
+                  ) : !articleAnalytics?.hasData ? (
+                    <div className="flex flex-col items-center justify-center h-[280px] text-center">
+                      <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold text-muted-foreground mb-2">No Articles Yet</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Generate your first article to see analytics here
+                      </p>
+                      <Button
+                        onClick={() => navigate("/dashboard/article-writer")}
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Generate Your First Article
+                      </Button>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={280}>
+                      <AreaChart data={articleAnalytics.chartData}>
+                        <defs>
+                          <linearGradient id="articleGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.05}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
+                        <XAxis
+                          dataKey="name"
+                          axisLine={false}
+                          tickLine={false}
+                          className="text-xs"
+                        />
+                        <YAxis
+                          axisLine={false}
+                          tickLine={false}
+                          className="text-xs"
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--background))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="articles"
+                          stroke="#8b5cf6"
+                          strokeWidth={2}
+                          fill="url(#articleGradient)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
                 </CardContent>
               </Card>
             </ErrorBoundary>
@@ -192,35 +241,59 @@ export default function Dashboard() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={280}>
-                    <BarChart data={keywordData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
-                      <XAxis
-                        dataKey="name"
-                        axisLine={false}
-                        tickLine={false}
-                        className="text-xs"
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        className="text-xs"
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--background))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                        }}
-                      />
-                      <Bar
-                        dataKey="keywords"
-                        fill="#3b82f6"
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {isLoadingKeywords ? (
+                    <div className="flex items-center justify-center h-[280px]">
+                      <div className="flex flex-col items-center gap-2">
+                        <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
+                        <p className="text-sm text-muted-foreground">Loading keyword data...</p>
+                      </div>
+                    </div>
+                  ) : !keywordAnalytics?.hasData ? (
+                    <div className="flex flex-col items-center justify-center h-[280px] text-center">
+                      <Target className="h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold text-muted-foreground mb-2">No Keyword Research Yet</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Start researching keywords to see analytics here
+                      </p>
+                      <Button
+                        onClick={() => navigate("/dashboard/keyword-research")}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Target className="h-4 w-4 mr-2" />
+                        Start Keyword Research
+                      </Button>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={280}>
+                      <BarChart data={keywordAnalytics.chartData}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
+                        <XAxis
+                          dataKey="name"
+                          axisLine={false}
+                          tickLine={false}
+                          className="text-xs"
+                        />
+                        <YAxis
+                          axisLine={false}
+                          tickLine={false}
+                          className="text-xs"
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--background))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                          }}
+                        />
+                        <Bar
+                          dataKey="keywords"
+                          fill="#3b82f6"
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
                 </CardContent>
               </Card>
             </ErrorBoundary>

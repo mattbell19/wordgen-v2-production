@@ -14,6 +14,7 @@ import scrapingRoutes from "./routes/scraping";
 import { wordRoutes } from "./routes/words";
 import { sitemapRoutes } from "./routes/sitemap";
 import { searchUsageRoutes } from "./routes/search-usage";
+import dashboardAnalyticsRouter from "./routes/dashboard-analytics";
 import * as trpcExpress from '@trpc/server/adapters/express';
 import { appRouter } from './router';
 import { createContext } from './trpc';
@@ -48,6 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/words", wordRoutes);
   app.use("/api/sitemap", sitemapRoutes);
   app.use("/api/search-usage", searchUsageRoutes);
+  app.use("/api/dashboard", dashboardAnalyticsRouter);
 
   return httpServer;
 }
