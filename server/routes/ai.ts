@@ -95,7 +95,7 @@ router.post('/article/generate',
 
         // Use a timeout wrapper to prevent Heroku timeout
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Generation timeout')), 25000); // 25 second timeout
+          setTimeout(() => reject(new Error('Generation timeout')), 28000); // 28 second timeout (just under Heroku's 30s limit)
         });
 
         const generationPromise = generateArticle(requestBody);

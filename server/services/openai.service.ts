@@ -83,6 +83,9 @@ function inferIndustryFromKeyword(keyword: string): string {
 export async function generateArticleWithGPT(settings: ArticleSettings): Promise<ArticleResponse> {
   console.log('🚀 Generating enhanced article with expert prompts:', settings);
 
+  // Track generation start time for timeout management
+  const startTime = Date.now();
+
   // Validate OpenAI API key first
   try {
     validateOpenAIKey();
@@ -303,6 +306,25 @@ Write the complete article now.`
 
     // Check if content meets quality threshold (80+)
     if (!ContentQualityService.meetsQualityThreshold(qualityAnalysis)) {
+      // Check if we're running out of time - skip improvement if so
+      const timeElapsed = Date.now() - startTime;
+      if (timeElapsed > 20000 || settings.wordCount > 1200) {
+        console.log('⚠️ Skipping quality improvement to prevent timeout. Time elapsed:', timeElapsed + 'ms', 'Word count:', settings.wordCount);
+
+        // Calculate word count for early return
+        const wordCount = countWords(content);
+
+        return {
+          content: content,
+          wordCount: wordCount,
+          readingTime: Math.ceil(wordCount / 200),
+          settings,
+          qualityMetrics: qualityAnalysis.metrics,
+          expertPersona: expertPersona.name,
+          industry: industryContext.industry
+        };
+      }
+
       console.log('⚠️ Content quality below threshold, attempting improvement...');
 
       // Generate improvement prompt
