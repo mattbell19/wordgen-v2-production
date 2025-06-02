@@ -64,22 +64,38 @@ export class RateLimitError extends AppError {
   }
 }
 
-// Error handling middleware for Express
+// Enhanced error handling middleware with security considerations
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('Error occurred:', {
+  // Generate error ID for tracking
+  const errorId = `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  // Log error with context but sanitize sensitive information
+  const logData = {
+    errorId,
     name: err.name,
     message: err.message,
-    stack: err.stack,
     status: (err as AppError).status,
     code: (err as AppError).code,
     path: req.path,
-    method: req.method
-  });
+    method: req.method,
+    userAgent: req.headers['user-agent'],
+    ip: req.ip,
+    userId: (req as any).user?.id,
+    timestamp: new Date().toISOString(),
+    // Only include stack trace in development
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+  };
+
+  console.error('Error occurred:', logData);
 
   // Always set content type to application/json for API routes
   if (req.path.startsWith('/api/')) {
     res.type('application/json');
   }
+
+  // Set security headers to prevent information leakage
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cache-Control', 'no-store');
 
   // If the error is one of our application errors
   if (err instanceof AppError) {
@@ -88,8 +104,10 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
         success: false,
         error: err.code,
         message: err.message,
+        errorId,
         ...(err instanceof ValidationError && { errors: err.errors }),
-        ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+        // Only include stack trace in development for operational errors
+        ...(process.env.NODE_ENV !== 'production' && err.isOperational && { stack: err.stack })
       });
     }
     return res.status(err.status).send(err.message);
@@ -97,17 +115,19 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
 
   // For unknown errors, return a generic error in production
   const statusCode = 500;
+  const isProduction = process.env.NODE_ENV === 'production';
+
   if (req.path.startsWith('/api/')) {
     return res.status(statusCode).json({
       success: false,
       error: 'INTERNAL_SERVER_ERROR',
-      message: process.env.NODE_ENV === 'production'
-        ? 'An unexpected error occurred'
-        : err.message || 'An unexpected error occurred',
+      message: isProduction ? 'An unexpected error occurred' : err.message || 'An unexpected error occurred',
+      errorId,
       ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
     });
   }
-  return res.status(statusCode).send('An unexpected error occurred');
+
+  return res.status(statusCode).send(isProduction ? 'An unexpected error occurred' : err.message);
 };
 
 // Async handler to catch exceptions in async route handlers

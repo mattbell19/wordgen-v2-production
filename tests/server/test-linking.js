@@ -1,6 +1,6 @@
 // Simple integration test for linking functionality
 import axios from 'axios';
-import { DOMParser } from 'xmldom';
+import { DOMParser } from '@xmldom/xmldom';
 
 // Mock internal link service
 class InternalLinkService {

@@ -15,6 +15,7 @@ import { adminRouter } from './admin';
 import { integrationRoutes } from './integrations';
 import webflowRouter from './webflow';
 import { aiRoutes } from './ai';
+import securityRouter from './security';
 
 export const apiRouter = express.Router();
 
@@ -35,5 +36,6 @@ apiRouter.use('/admin', adminRouter);
 apiRouter.use('/integrations', integrationRoutes);
 apiRouter.use('/webflow', webflowRouter);
 apiRouter.use('/ai', aiRoutes);
+apiRouter.use('/security', securityRouter);
 
 export default apiRouter; 

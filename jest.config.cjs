@@ -10,6 +10,7 @@ module.exports = {
   testMatch: [
     '<rootDir>/client/src/**/*.test.{ts,tsx}',
     '<rootDir>/server/**/*.test.{ts,tsx}',
+    '<rootDir>/tests/**/*.test.{ts,tsx}',
   ],
   transform: {
     '^.+\\.tsx?$': [
@@ -27,6 +28,7 @@ module.exports = {
   collectCoverageFrom: [
     'client/src/**/*.{ts,tsx}',
     'server/**/*.{ts,tsx}',
+    'tests/**/*.{ts,tsx}',
     '!**/*.d.ts',
     '!**/node_modules/**',
   ],

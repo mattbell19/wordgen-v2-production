@@ -30,7 +30,13 @@
     "db:status": "node scripts/migrate-database.js --status",
     "heroku-postbuild": "npm run build:client && npm run build:server",
     "test:article": "node test-article-api.js",
-    "setup:production": "node scripts/setup-production.js"
+    "test:security": "jest --testPathPattern=security --config jest.config.cjs",
+    "setup:production": "node scripts/setup-production.js",
+    "security:setup": "node scripts/setup-security.js",
+    "security:audit": "npm audit && npm run security:check-deps",
+    "security:check-deps": "npm outdated",
+    "security:fix": "npm audit fix",
+    "security:report": "node scripts/setup-security.js && npm audit --json > security-audit.json"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.1",
@@ -84,8 +90,8 @@
     "@types/morgan": "^1.9.9",
     "@types/nodemailer": "^6.4.17",
     "@types/pg": "^8.11.11",
-    "@types/xmldom": "^0.1.34",
     "@uiw/react-textarea-code-editor": "^3.1.0",
+    "@xmldom/xmldom": "^0.9.8",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "class-variance-authority": "^0.7.1",
@@ -108,6 +114,7 @@
     "googleapis": "^148.0.0",
     "helmet": "^8.1.0",
     "input-otp": "^1.2.4",
+    "isomorphic-dompurify": "^2.25.0",
     "jsdom": "^26.1.0",
     "lexical": "^0.23.1",
     "lottie-web": "^5.12.2",
@@ -141,7 +148,6 @@
     "vaul": "^1.1.0",
     "wouter": "^3.7.1",
     "ws": "^8.18.0",
-    "xmldom": "^0.6.0",
     "zod": "^3.24.1",
     "zustand": "^5.0.3"
   },
@@ -159,6 +165,7 @@
     "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/user-event": "^14.6.1",
     "@types/compression": "^1.7.5",
+    "@types/dompurify": "^3.0.5",
     "@types/express": "^4.17.21",
     "@types/express-session": "^1.18.1",
     "@types/jest": "^29.5.14",

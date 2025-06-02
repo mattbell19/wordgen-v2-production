@@ -1,5 +1,5 @@
 import { ArticleResponse, ArticleCreationParams } from './article.service';
-import { DOMParser } from 'xmldom';
+import { DOMParser } from '@xmldom/xmldom';
 
 /**
  * Schema Markup Service

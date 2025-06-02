@@ -11,6 +11,8 @@ import crypto from 'crypto';
 import { initializeServices, scheduleCleanupTasks, cleanupServices } from './startup';
 import { errorHandler, setupGlobalErrorHandlers } from './lib/error-handler';
 import { apiRateLimiter } from './middleware/authMiddleware';
+import { preventSqlInjection, validateRequestSize } from './middleware/validation';
+import { securityMonitor, SecurityEventType, SecuritySeverity, createSecurityEvent } from './lib/security-monitor';
 
 import gscAuthDirectRoute from './gsc-auth-direct';
 import { gscService } from './services/gsc.service';
@@ -20,6 +22,7 @@ import apiRouter from './routes/api';
 import { authRoutes } from './routes/auth';
 import { userRoutes } from './routes/user';
 import seoRouter from './routes/seo';
+import securityRouter from './routes/security';
 import rateLimiter from './lib/rate-limiter';
 import { logger } from './lib/logger';
 import { logEnvironmentStatus } from './lib/env-validator';
@@ -64,39 +67,20 @@ app.use((req, res, next) => {
   const nonce = res.locals.nonce;
   const isDev = process.env.NODE_ENV !== 'production';
 
-  // In development mode, use a more permissive CSP to avoid issues
-  const policies = isDev ? {
-    'default-src': ["'self'"],
-    'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'unsafe-hashes'", "*"],
-    'style-src': ["'self'", "'unsafe-inline'", "*"],
-    'style-src-elem': ["'self'", "'unsafe-inline'", "*"],
-    'font-src': ["'self'", "*", "data:"],
-    'img-src': ["'self'", "data:", "blob:", "*"],
-    'connect-src': ["'self'", "*", "ws:", "wss:"],
-    'frame-src': ["'self'", "*"],
-    'worker-src': ["'self'", "blob:", "*"],
-    'manifest-src': ["'self'"],
-    'media-src': ["'self'"],
-    'object-src': ["'none'"],
-    'base-uri': ["'self'"],
-    'form-action': ["'self'"],
-    'frame-ancestors': ["'none'"],
-    'report-uri': ['/api/csp-report'],
-    'report-to': ['default']
-  } : {
+  // Use secure CSP in all environments with nonce-based script execution
+  const policies = {
     'default-src': ["'self'"],
     'script-src': [
       "'self'",
       `'nonce-${nonce}'`,
-      "'unsafe-inline'",
-      "'unsafe-eval'",
-      "'unsafe-hashes'",
+      // Only allow unsafe-inline and unsafe-eval in development
+      ...(isDev ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
       'https://js.stripe.com',
       'https://m.stripe.network',
       'https://m.stripe.com',
       'https://*.posthog.com',
       'https://eu.i.posthog.com',
-      // Add specific hashes for inline scripts
+      // Add specific hashes for known inline scripts
       "'sha256-5DA+a07wxWmEka9IdoWjSPVHb17Cp5284/lJzfbl8KA='",
       "'sha256-/5Guo2nzv5n/w6ukZpOBZOtTJBJPSkJ6mhHpnBgm3Ls='",
     ],
@@ -133,7 +117,9 @@ app.use((req, res, next) => {
       'https://wordgen.io',
       'https://www.wordgen.io',
       'wss://wordgen.io',
-      'wss://www.wordgen.io'
+      'wss://www.wordgen.io',
+      // Allow development connections
+      ...(isDev ? ['ws://localhost:*', 'http://localhost:*', 'https://localhost:*'] : [])
     ],
     'frame-src': [
       "'self'",
@@ -155,11 +141,12 @@ app.use((req, res, next) => {
     .map(([key, values]) => `${key} ${values.join(' ')}`)
     .join('; ');
 
-  // Use Report-Only CSP in development to catch violations without breaking functionality
+  // Always enforce CSP, but log violations in development
+  res.setHeader('Content-Security-Policy', cspString);
+
+  // Also set report-only header in development for debugging
   if (isDev) {
     res.setHeader('Content-Security-Policy-Report-Only', cspString);
-  } else {
-    res.setHeader('Content-Security-Policy', cspString);
   }
 
   // Add other security headers
@@ -175,17 +162,44 @@ app.use((req, res, next) => {
   next();
 });
 
-// Configure CORS
+// Configure CORS with strict origin validation
+const getAllowedOrigins = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return [
+      'https://wordgen.io',
+      'https://www.wordgen.io',
+      'https://wordgen-v2-production-15d78da87625.herokuapp.com'
+    ];
+  }
+
+  // Development origins - only allow specific localhost ports
+  const allowedOrigins = ['http://localhost:4002', 'http://127.0.0.1:4002'];
+
+  // Allow additional origins from environment variable if specified
+  if (process.env.ALLOWED_ORIGINS) {
+    const additionalOrigins = process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim());
+    allowedOrigins.push(...additionalOrigins);
+  }
+
+  return allowedOrigins;
+};
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? [
-        'https://wordgen.io',
-        'https://www.wordgen.io',
-        'https://wordgen-v2-production-15d78da87625.herokuapp.com' // Add Heroku domain
-      ]
-    : ['http://localhost:4002', 'http://127.0.0.1:4002'], // Allow both localhost and 127.0.0.1
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    const allowedOrigins = getAllowedOrigins();
+
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS: Blocked request from unauthorized origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'), false);
+    }
+  },
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Upgrade', 'Connection', 'Cookie'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   maxAge: 86400, // 24 hours
   exposedHeaders: ['Set-Cookie'],
@@ -209,12 +223,51 @@ app.use(cors(corsOptions));
 // Handle preflight requests
 app.options('*', cors(corsOptions));
 
-// Parse JSON bodies
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Parse JSON bodies with size limits
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Add security middleware
+app.use(validateRequestSize(10 * 1024 * 1024)); // 10MB limit
+app.use(preventSqlInjection);
 
 // Add API rate limiting to all API routes
 app.use('/api', apiRateLimiter);
+
+// Add security monitoring middleware
+app.use((req, res, next) => {
+  // Log suspicious requests
+  const suspiciousPatterns = [
+    /\.\./,  // Directory traversal
+    /<script/i,  // XSS attempts
+    /union.*select/i,  // SQL injection
+    /exec\(/i,  // Code execution
+  ];
+
+  const fullUrl = req.originalUrl || req.url;
+  const isSuspicious = suspiciousPatterns.some(pattern =>
+    pattern.test(fullUrl) ||
+    pattern.test(JSON.stringify(req.body)) ||
+    pattern.test(JSON.stringify(req.query))
+  );
+
+  if (isSuspicious) {
+    const event = createSecurityEvent(
+      SecurityEventType.SUSPICIOUS_REQUEST,
+      SecuritySeverity.MEDIUM,
+      `Suspicious request pattern detected: ${req.method} ${fullUrl}`,
+      req,
+      {
+        url: fullUrl,
+        body: req.body,
+        query: req.query
+      }
+    );
+    securityMonitor.logSecurityEvent(event);
+  }
+
+  next();
+});
 
 // Add request logging in development
 if (process.env.NODE_ENV !== 'production') {

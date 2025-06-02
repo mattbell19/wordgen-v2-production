@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-06-02T09:48:05.386Z",
+  "sessionSecretConfigured": true,
+  "databaseConfigured": true,
+  "hasPlaceholders": true,
+  "missingRequiredVars": [],
+  "recommendations": [
+    "Replace placeholder API keys",
+    "Set up SSL/TLS in production",
+    "Configure monitoring and alerting",
+    "Regular security audits",
+    "Keep dependencies updated"
+  ]
+}

@@ -1,13 +1,13 @@
 import { InternalLinkService, InternalLink } from '../internal-link.service';
 import axios from 'axios';
-import { DOMParser } from 'xmldom';
+import { DOMParser } from '@xmldom/xmldom';
 
 // Mock axios
 jest.mock('axios');
 const mockAxios = axios as jest.Mocked<typeof axios>;
 
 // Mock DOMParser
-jest.mock('xmldom', () => {
+jest.mock('@xmldom/xmldom', () => {
   return {
     DOMParser: jest.fn().mockImplementation(() => ({
       parseFromString: jest.fn()

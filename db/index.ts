@@ -7,16 +7,36 @@ if (!config.databaseUrl) {
   throw new Error('DATABASE_URL is required');
 }
 
-// Only require SSL in production
+// Always require SSL in production, optional in development
 const isProduction = config.nodeEnv === 'production';
-const dbUrl = isProduction && !config.databaseUrl.includes('sslmode=require') 
+const dbUrl = isProduction && !config.databaseUrl.includes('sslmode=require')
   ? `${config.databaseUrl}${config.databaseUrl.includes('?') ? '&' : '?'}sslmode=require`
   : config.databaseUrl;
 
-// Create SQL client
-const client = postgres(dbUrl, { 
+// Create SQL client with enhanced security and monitoring
+const client = postgres(dbUrl, {
   ssl: isProduction ? 'require' : false,
-  max: 10
+  max: parseInt(process.env.DB_MAX_CONNECTIONS || '10'),
+  idle_timeout: 20,
+  connect_timeout: 10,
+  prepare: false, // Disable prepared statements for better security
+  onnotice: (notice) => {
+    console.log('[DB] Notice:', notice);
+  },
+  onnotify: (channel, payload) => {
+    console.log('[DB] Notify:', { channel, payload });
+  },
+  debug: (connection, query, parameters) => {
+    if (process.env.LOG_QUERIES === 'true') {
+      console.log('[DB] Query:', {
+        query: query.slice(0, 200) + (query.length > 200 ? '...' : ''),
+        parameters: parameters?.slice(0, 5) // Limit parameter logging
+      });
+    }
+  },
+  transform: {
+    undefined: null // Transform undefined to null for better SQL compatibility
+  }
 });
 
 // Create database instance with schema

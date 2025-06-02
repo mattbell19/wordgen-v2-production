@@ -140,10 +140,13 @@ export async function setupAuth(app: Express) {
   // Initialize session store first
   await initializeSessionStore();
 
-  // Get session secret from environment variables with fallback
-  const sessionSecret = process.env.SESSION_SECRET || process.env.JWT_SECRET || "development-secret";
-  if (process.env.NODE_ENV === 'production' && sessionSecret === 'development-secret') {
-    console.warn('WARNING: Using default session secret in production. This is insecure!');
+  // Get session secret from environment variables - REQUIRED
+  const sessionSecret = process.env.SESSION_SECRET;
+  if (!sessionSecret) {
+    throw new Error('SESSION_SECRET environment variable is required');
+  }
+  if (sessionSecret === 'development-secret' || sessionSecret.length < 32) {
+    throw new Error('SESSION_SECRET must be a strong random string of at least 32 characters');
   }
 
   const isDev = process.env.NODE_ENV !== 'production';

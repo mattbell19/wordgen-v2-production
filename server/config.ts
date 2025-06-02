@@ -15,20 +15,42 @@ console.log('[CONFIG] Environment:', {
   envPath: resolve(__dirname, '../.env')
 });
 
-// Make certain environment variables optional in development mode
+// Environment validation
 const isDevelopment = process.env.NODE_ENV === 'development';
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Make certain environment variables optional in development mode
-const requiredEnvVars = isDevelopment ? [] : [
+// Critical environment variables that must always be present
+const criticalEnvVars = [
   'DATABASE_URL',
-  'RESEND_API_KEY',
-  'STRIPE_WEBHOOK_SECRET'
+  'SESSION_SECRET'
 ];
 
-for (const envVar of requiredEnvVars) {
+// Production-only required environment variables
+const productionEnvVars = [
+  'RESEND_API_KEY',
+  'STRIPE_WEBHOOK_SECRET',
+  'OPENAI_API_KEY'
+];
+
+// Validate critical environment variables
+for (const envVar of criticalEnvVars) {
   if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`);
+    throw new Error(`Missing critical environment variable: ${envVar}`);
   }
+}
+
+// Validate production environment variables
+if (isProduction) {
+  for (const envVar of productionEnvVars) {
+    if (!process.env[envVar]) {
+      console.warn(`Warning: Missing production environment variable: ${envVar}`);
+    }
+  }
+}
+
+// Validate session secret strength
+if (process.env.SESSION_SECRET && process.env.SESSION_SECRET.length < 32) {
+  throw new Error('SESSION_SECRET must be at least 32 characters long');
 }
 
 const configuration = {
