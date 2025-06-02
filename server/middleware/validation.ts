@@ -276,7 +276,22 @@ export function preventSqlInjection(req: Request, res: Response, next: NextFunct
     /\b(XP_|SP_)\w+/i
   ];
 
+  // Paths that should be excluded from SQL injection checks (AI-generated content)
+  const excludedPaths = [
+    'body.content',        // Article content
+    'body.title',          // Article titles
+    'body.description',    // Article descriptions
+    'body.keyword',        // Keywords
+    'body.primaryKeyword', // Primary keywords
+    'body.callToAction'    // Call to action text
+  ];
+
   function checkForSqlInjection(obj: any, path: string = ''): string | null {
+    // Skip checking if this path is excluded (AI-generated content)
+    if (excludedPaths.includes(path)) {
+      return null;
+    }
+
     if (typeof obj === 'string') {
       for (const pattern of sqlInjectionPatterns) {
         if (pattern.test(obj)) {
