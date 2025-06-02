@@ -173,98 +173,31 @@ export async function generateArticle(params: ArticleCreationParams): Promise<st
     if (articleStructure.seoFeatures.relatedTopics) seoFeaturesList.push('Include related topics and LSI keywords');
     if (articleStructure.seoFeatures.metaDescription) seoFeaturesList.push('Include a meta description suggestion at the end');
 
-    const systemPrompt = `You are an expert SEO content writer and researcher. Your task is to create a comprehensive, high-ranking article that outperforms competitors in search results.
+    const systemPrompt = `You are an expert content writer. Write a comprehensive, high-quality article about "${mainTopic}".
 
-TOPIC: ${mainTopic}
-KEYWORD: ${mainTopic}
-WORDCOUNT: ${wordCount} words (minimum)
-AUDIENCE: ${targetAudience} seeking ${tone} information
-TONE: ${tone}
+REQUIREMENTS:
+- Topic: ${mainTopic}
+- Word count: ${wordCount} words
+- Tone: ${tone}
+- Format: HTML with proper tags
 
-STEP-BY-STEP PROCESS:
+STRUCTURE:
+1. <h1> title with keyword
+2. Introduction paragraph
+3. 4-5 main sections with <h2> headings
+4. Conclusion with call-to-action
 
-1. COMPETITIVE ANALYSIS:
-   - Analyze top-ranking content for "${mainTopic}" to understand what users expect
-   - Identify content gaps and opportunities for unique value
-   - Note common headings and structure patterns used by competitors
+CONTENT GUIDELINES:
+- Use keyword "${mainTopic}" naturally 3-5 times
+- Include practical examples and actionable advice
+- Write in ${tone} tone for general audience
+- Use proper HTML: <h1>, <h2>, <p>, <ul>, <ol>, <strong>
+- Keep paragraphs short and readable
+- Include specific details and insights
 
-2. CONTENT OUTLINE:
-   - Create a detailed outline with at least 12-15 headings and subheadings (H1, H2, H3, H4)
-   - Ensure logical flow that addresses key user search intents
-   - Plan comprehensive coverage that goes beyond competitor content
+${callToAction ? `Call-to-action: "${callToAction}"` : 'Include relevant call-to-action'}
 
-3. KEYWORD STRATEGY:
-   - Primary keyword: "${mainTopic}" (use 5-7 times naturally, aim for 1-2% density)
-   - Related keywords: ${keywords.join(', ')}
-   - Incorporate 10-15 long-tail keywords and LSI terms naturally throughout
-   - Focus on semantic relevance and user intent
-
-4. ARTICLE STRUCTURE:
-
-   A. SEO-OPTIMIZED TITLE (H1):
-      - Include primary keyword "${mainTopic}"
-      - Under 60 characters for optimal SERP display
-      - Compelling and benefit-driven for ${targetAudience}
-
-   B. ENGAGING INTRODUCTION (150-200 words):
-      - Hook with surprising statistic, question, or relatable scenario
-      - Introduce topic and outline article value
-      - Naturally include primary keyword
-      - Address reader's pain points or goals
-
-   C. MAIN CONTENT SECTIONS (H2/H3/H4):
-      - Each H2 section: 300-500 words of in-depth content
-      - Include relevant examples, data, case studies, and statistics
-      - Add unique insights not found in competing articles
-      - Naturally incorporate 1-2 long-tail keywords per section
-      - Speak directly to ${targetAudience} with ${tone} tone
-
-   D. VISUAL CONTENT SUGGESTIONS:
-      - Describe 2-3 custom images/diagrams/infographics
-      - Include detailed alt text optimized for keywords
-      - Format as: <div class="image-suggestion">Image: [description] | Alt text: [SEO-optimized alt text]</div>
-
-   E. QUICK TAKEAWAYS SECTION:
-      - 5-7 bullet points summarizing main insights
-      - Format as: <div class="quick-takeaways"><h3>Key Takeaways</h3><ul><li>Point 1</li><li>Point 2</li></ul></div>
-
-   F. FAQ SECTION:
-      - 5 unique, relevant questions about ${mainTopic}
-      - Concise yet informative answers
-      - Naturally include long-tail keywords
-      - Address common user concerns and search queries
-
-   G. CONCLUSION (200-250 words):
-      - Summarize key points and main message
-      - Reinforce value for ${targetAudience}
-      - Include compelling call-to-action
-      ${callToAction ? `- Use this specific CTA: "${callToAction}"` : '- Encourage next steps relevant to the topic'}
-
-5. TECHNICAL REQUIREMENTS:
-   - Use proper HTML formatting throughout
-   - H1 for title, H2 for main sections, H3/H4 for subsections
-   - Proper paragraph tags: <p>content</p>
-   - Lists: <ul><li>item</li></ul> or <ol><li>item</li></ol>
-   - Tables for comparisons: <table><tr><th>Header</th></tr><tr><td>Data</td></tr></table>
-   - Bold important phrases: <strong>text</strong>
-   - Italics for emphasis: <em>text</em>
-
-6. QUALITY STANDARDS:
-   - Maintain high perplexity and burstiness in writing style
-   - Use conversational tone that builds trust and authority
-   - Support claims with logical reasoning and examples
-   - Ensure factual accuracy and comprehensive coverage
-   - Focus on actionable value readers can implement
-   - Keep paragraphs short (2-3 sentences) for readability
-
-7. ENGAGEMENT ELEMENTS:
-   - Include pro tips: <div class="pro-tip"><p>Expert advice here</p></div>
-   - Add statistics: <div class="stat-highlight"><p>Important statistic: X% of users...</p></div>
-   - Use callout boxes: <div class="callout-box"><h4>Important Note</h4><p>Content here</p></div>
-   - Add comparison tables where relevant
-
-FINAL OUTPUT:
-Deliver a complete, publication-ready article that meets or exceeds ${wordCount} words while maintaining exceptional quality, comprehensive coverage, and strong SEO optimization throughout.`;
+Write the complete article now with proper HTML formatting.`;
 
     // Add linking instructions if links are available
     let linkingInstructions = '';
@@ -373,11 +306,11 @@ ${externalLinks.slice(0, 3).map(link => `  - Link to: ${link.url} with title: "$
           },
           {
             role: 'user',
-            content: `Write a comprehensive ${wordCount}-word article about "${mainTopic}". The article should be engaging, clear, and optimized for SEO while providing valuable information that addresses readers' questions and challenges related to the topic.`
+            content: `Write a ${wordCount}-word article about "${mainTopic}".`
           }
         ],
         temperature: 0.7,
-        max_tokens: 2000 // Reduced for faster response
+        max_tokens: 1500 // Reduced for faster response
       });
 
       const endTime = Date.now();
