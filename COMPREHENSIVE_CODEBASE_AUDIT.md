@@ -211,7 +211,7 @@ This audit identifies critical security vulnerabilities, code quality issues, pe
 ### API Key Exposure Details
 ```bash
 # Found in .env file (line 16)
-OPENAI_API_KEY=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
+OPENAI_API_KEY=sk-proj-[REDACTED-FOR-SECURITY]
 
 # Immediate actions required:
 1. Revoke this key in OpenAI dashboard
