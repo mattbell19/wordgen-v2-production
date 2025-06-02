@@ -60,12 +60,11 @@ export default function Dashboard() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const [, navigate] = useLocation();
 
-  // Redirect to auth if not logged in
-  useEffect(() => {
-    if (!isAuthLoading && !user) {
-      navigate("/auth");
-    }
-  }, [user, isAuthLoading]); // Removed navigate from dependencies to prevent infinite loop
+  // Simple redirect logic without useEffect to prevent infinite loops
+  if (!isAuthLoading && !user) {
+    navigate("/auth");
+    return null;
+  }
 
   if (isAuthLoading) {
     return (
@@ -82,6 +81,11 @@ export default function Dashboard() {
     return null;
   }
 
+  return <DashboardContent user={user} navigate={navigate} />;
+}
+
+// Separate component for dashboard content to isolate queries
+function DashboardContent({ user, navigate }: { user: any; navigate: (path: string) => void }) {
   // Query for article analytics
   const { data: articleAnalytics, isLoading: isLoadingArticles } = useQuery<ArticleAnalytics>({
     queryKey: ['dashboard-articles'],
@@ -324,53 +328,42 @@ export default function Dashboard() {
 function UsageStats() {
   const queryClient = useQueryClient();
 
-  // Mutation to sync usage data
-  const syncUsage = useMutation({
-    mutationFn: async () => {
-      try {
-        console.log('Syncing usage data...');
-        const response = await fetch('/api/user/sync', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          console.error(`Sync error: HTTP ${response.status}`);
-          try {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `HTTP error ${response.status}`);
-          } catch (jsonError) {
-            // If the response is not valid JSON, throw a generic error
-            console.error("Error parsing JSON response:", jsonError);
-            throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
-          }
+  // Simple sync function without useCallback to avoid dependency issues
+  const handleSync = async () => {
+    try {
+      console.log('Syncing usage data...');
+      const response = await fetch('/api/user/sync', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
+      });
 
-        try {
-          const data = await response.json();
-          console.log('Sync response:', data);
-          return data;
-        } catch (jsonError) {
-          console.error("Error parsing JSON response:", jsonError);
-          throw new Error('Invalid JSON response from server');
-        }
-      } catch (error) {
-        console.error('Error syncing usage data:', error);
-        // Return a default object to prevent further errors
-        return { success: false, error: 'Failed to sync usage data' };
+      if (!response.ok) {
+        console.error(`Sync error: HTTP ${response.status}`);
+        throw new Error(`HTTP error ${response.status}`);
       }
-    },
-    onSuccess: (data) => {
-      console.log('Sync success:', data);
+
+      const data = await response.json();
+      console.log('Sync response:', data);
+
       if (data.success) {
         // Invalidate the usage query to refetch with updated data
         queryClient.invalidateQueries({ queryKey: ['userUsage'] });
       }
-    },
+
+      return data;
+    } catch (error) {
+      console.error('Error syncing usage data:', error);
+      throw error;
+    }
+  };
+
+  // Mutation to sync usage data
+  const syncUsage = useMutation({
+    mutationFn: handleSync,
     onError: (error) => {
       console.error('Sync mutation error:', error);
     }
@@ -401,10 +394,8 @@ function UsageStats() {
     retry: 1, // Only retry once
   });
 
-  // Trigger sync on component mount
-  useEffect(() => {
-    syncUsage.mutate();
-  }, []); // Empty dependency array to run only once on mount
+  // Remove automatic sync on mount to prevent infinite re-renders
+  // Users can manually sync if needed using the sync button
 
   return (
     <LoadingState
