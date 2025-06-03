@@ -414,7 +414,8 @@ app.get('/api/health', (_req, res) => {
       redis: hasRedis,
       openai: !!process.env.OPENAI_API_KEY,
       stripe: !!process.env.STRIPE_SECRET_KEY,
-      email: !!process.env.RESEND_API_KEY
+      email: !!process.env.RESEND_API_KEY,
+      google: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
     }
   });
 });
