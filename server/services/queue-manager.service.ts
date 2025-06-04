@@ -91,8 +91,8 @@ export class QueueManagerService {
       const userId = item.settings.userId;
       const projectId = item.settings.projectId;
 
-      if (!userId || !projectId) {
-        throw new Error('Missing user ID or project ID in settings');
+      if (!userId) {
+        throw new Error('Missing user ID in settings');
       }
 
       // Generate the article
@@ -111,21 +111,28 @@ export class QueueManagerService {
       const articleId = result.article.id;
 
       // Save the article to the database
+      const articleData: any = {
+        userId: userId as number,
+        title: `${item.keyword} Article`,
+        content: result.article.content,
+        wordCount: result.article.wordCount,
+        readingTime: Math.ceil(result.article.wordCount / 200),
+        creditsUsed: 1,
+        queueId: queueId, // Link to the queue
+        settings: {
+          keyword: item.keyword,
+          tone: item.settings.tone,
+          wordCount: item.settings.wordCount
+        },
+      };
+
+      // Only add projectId if it exists
+      if (projectId) {
+        articleData.projectId = projectId as number;
+      }
+
       const [savedArticle] = await db.insert(articles)
-        .values({
-          userId: userId as number,
-          projectId: projectId as number,
-          title: `${item.keyword} Article`,
-          content: result.article.content,
-          wordCount: result.article.wordCount,
-          readingTime: Math.ceil(result.article.wordCount / 200),
-          creditsUsed: 1,
-          settings: {
-            keyword: item.keyword,
-            tone: item.settings.tone,
-            wordCount: item.settings.wordCount
-          },
-        })
+        .values(articleData)
         .returning();
 
       // Update item with success and track credit usage
@@ -147,14 +154,16 @@ export class QueueManagerService {
           })
           .where(eq(articleQueues.id, queueId));
 
-        // Update project progress
-        await tx
-          .update(projects)
-          .set({
-            completedKeywords: sql`${projects.completedKeywords} + 1`,
-            updatedAt: new Date()
-          })
-          .where(eq(projects.id, projectId as number));
+        // Update project progress (only if projectId exists)
+        if (projectId) {
+          await tx
+            .update(projects)
+            .set({
+              completedKeywords: sql`${projects.completedKeywords} + 1`,
+              updatedAt: new Date()
+            })
+            .where(eq(projects.id, projectId as number));
+        }
 
         // Track credit usage
         await tx.execute(sql`
@@ -334,4 +343,29 @@ export class QueueManagerService {
   public onError(callback: (data: { queueId: number; error: string }) => void) {
     this.eventEmitter.on('error', callback);
   }
+
+  // Alias methods for compatibility with existing code
+  public async createQueue(options: { userId: number; totalItems: number; type?: string; batchName?: string }) {
+    return this.createBatch(options.userId, [], options.batchName);
+  }
+
+  public async addItems(queueId: number, items: QueueItem[]) {
+    // Add items to existing queue
+    await db.insert(articleQueueItems).values(
+      items.map(item => ({
+        queueId: queueId,
+        keyword: item.keyword,
+        settings: item.settings,
+      }))
+    );
+
+    // Update total items count
+    await db
+      .update(articleQueues)
+      .set({ totalItems: sql`${articleQueues.totalItems} + ${items.length}` })
+      .where(eq(articleQueues.id, queueId));
+  }
 }
+
+// Export singleton instance
+export const queueManager = QueueManagerService.getInstance();

@@ -5,7 +5,7 @@ import { generateArticle } from '../services/article.service';
 import { generateWords } from '../services/word.service';
 import type { ArticleCreationParams } from '../services/article.service';
 import type { WordGenerationParams } from '../services/word.service';
-import { requireAuth } from '../middlewares/authMiddleware';
+import { requireAuth } from '../middleware/authMiddleware';
 import ApiResponse from '../lib/api-response';
 
 // Initialize router
