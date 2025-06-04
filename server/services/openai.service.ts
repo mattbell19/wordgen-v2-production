@@ -395,7 +395,7 @@ Choose FORMAT B (Technical/Tutorial) for keywords related to:
         }
       ],
       temperature: 0.3,
-      max_tokens: 4000
+      max_tokens: 8000
     });
 
     let content = response.choices[0]?.message?.content;
@@ -426,7 +426,7 @@ Choose FORMAT B (Technical/Tutorial) for keywords related to:
     if (!ContentQualityService.meetsQualityThreshold(qualityAnalysis)) {
       // Check if we're running out of time - skip improvement if so
       const timeElapsed = Date.now() - startTime;
-      if (timeElapsed > 20000 || settings.wordCount > 1200) {
+      if (timeElapsed > 15000 || settings.wordCount > 800) {
         console.log('⚠️ Skipping quality improvement to prevent timeout. Time elapsed:', timeElapsed + 'ms', 'Word count:', settings.wordCount);
 
         // Calculate word count for early return
@@ -493,7 +493,7 @@ Maintain the same structure but significantly enhance the quality and depth.
             }
           ],
           temperature: 0.3,
-          max_tokens: 4000
+          max_tokens: 8000
         });
 
         const improvedContent = improvementResponse.choices[0]?.message?.content;
