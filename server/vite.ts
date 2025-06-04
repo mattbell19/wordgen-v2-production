@@ -104,15 +104,16 @@ export function serveStatic(app: Express) {
     });
   });
 
-  // Skip handling for API routes
-  app.use("*", (req, res, next) => {
+  // Catch-all handler for SPA routes - MUST be last and MUST skip API routes
+  app.get("*", (req, res, next) => {
+    // Skip API routes completely
     if (req.path.startsWith('/api/')) {
       return next();
     }
-    
+
     // Log the catch-all route being accessed
-    console.log(`[STATIC] Serving index.html for route: ${req.originalUrl}`);
-    
+    console.log(`[STATIC] Serving index.html for SPA route: ${req.originalUrl}`);
+
     // Set proper content type for HTML
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
