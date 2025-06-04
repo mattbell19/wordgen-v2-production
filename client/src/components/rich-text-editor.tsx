@@ -123,10 +123,17 @@ const ContentInitializer = ({ content }: { content: string }) => {
             case 'section': {
               // For special sections (FAQ, TOC, etc.), create a quote node to preserve them
               const className = element.className;
-              if (className && (className.includes('faq') || className.includes('toc') || className.includes('takeaway') || className.includes('highlight'))) {
+              if (className && (className.includes('faq') || className.includes('toc') || className.includes('takeaway') || className.includes('highlight') || className.includes('callout'))) {
                 lexicalNode = $createQuoteNode();
               } else {
-                lexicalNode = $createParagraphNode();
+                // For regular divs, check if they contain substantial content
+                const textContent = element.textContent?.trim();
+                if (textContent && textContent.length > 10) {
+                  lexicalNode = $createParagraphNode();
+                } else {
+                  // Skip empty or minimal divs
+                  return;
+                }
               }
               break;
             }
@@ -143,11 +150,29 @@ const ContentInitializer = ({ content }: { content: string }) => {
               // If no child elements, process text content with formatting
               const textContent = element.textContent || '';
               if (textContent.trim()) {
-                const textNode = $createTextNode(textContent.trim());
+                // Handle formatted text (bold, italic, etc.)
+                const processFormattedText = (text: string, parentElement: HTMLElement) => {
+                  // Check for strong/bold text
+                  if (parentElement.tagName.toLowerCase() === 'strong' || parentElement.tagName.toLowerCase() === 'b') {
+                    const textNode = $createTextNode(text.trim());
+                    textNode.toggleFormat('bold');
+                    return textNode;
+                  }
+                  // Check for em/italic text
+                  if (parentElement.tagName.toLowerCase() === 'em' || parentElement.tagName.toLowerCase() === 'i') {
+                    const textNode = $createTextNode(text.trim());
+                    textNode.toggleFormat('italic');
+                    return textNode;
+                  }
+                  // Regular text
+                  return $createTextNode(text.trim());
+                };
+
+                const textNode = processFormattedText(textContent, element);
                 lexicalNode.append(textNode);
               }
             } else {
-              // Process child nodes
+              // Process child nodes recursively
               Array.from(element.childNodes).forEach(child => {
                 processNode(child, lexicalNode!);
               });
@@ -203,12 +228,53 @@ const processContentLikePreview = (content: string): string => {
   // Remove any leading whitespace or newlines
   cleanedContent = cleanedContent.trim();
 
-  // If content already contains HTML, return it as is
+  // Handle full HTML documents (extract body content)
+  if (cleanedContent.includes('<!DOCTYPE html>') || cleanedContent.includes('<html')) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(cleanedContent, 'text/html');
+
+    // Extract only the body content, excluding scripts and styles
+    const bodyContent = doc.body;
+    if (bodyContent) {
+      // Remove script tags and JSON-LD structured data
+      const scripts = bodyContent.querySelectorAll('script');
+      scripts.forEach(script => script.remove());
+
+      // Get the cleaned HTML content
+      cleanedContent = bodyContent.innerHTML;
+    }
+  }
+
+  // Remove any remaining script tags or JSON-LD data
+  cleanedContent = cleanedContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+
+  // Clean up inline styles and complex attributes for editor compatibility
+  cleanedContent = cleanedContent
+    // Remove style attributes but keep the content
+    .replace(/\s*style="[^"]*"/gi, '')
+    // Remove complex IDs and classes that aren't needed for editing
+    .replace(/\s*id="[^"]*"/gi, '')
+    .replace(/\s*class="heading-anchor"/gi, '')
+    .replace(/\s*aria-label="[^"]*"/gi, '')
+    // Simplify anchor links within headings
+    .replace(/<a class="heading-anchor"[^>]*>(.*?)<\/a>/gi, '$1')
+    // Clean up navigation elements
+    .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '')
+    // Simplify table of contents to basic structure
+    .replace(/<div class="article-toc">/gi, '<div class="toc-section">')
+    // Preserve important callout boxes but simplify classes
+    .replace(/class="callout-box"/gi, 'class="quick-takeaway"')
+    .replace(/class="pro-tip"/gi, 'class="quick-takeaway"')
+    // Clean up extra whitespace
+    .replace(/\n\s*\n\s*\n/g, '\n\n')
+    .trim();
+
+  // If content already contains HTML, return the cleaned version
   if (cleanedContent.includes('<div') || cleanedContent.includes('<section') || cleanedContent.includes('<h1') || cleanedContent.includes('<h2')) {
     return cleanedContent;
   }
 
-  // Convert markdown headings to HTML
+  // Convert markdown headings to HTML (fallback for markdown content)
   let htmlContent = cleanedContent
     .replace(/^# (.*$)/gm, '<h1>$1</h1>')
     .replace(/^## (.*$)/gm, '<h2>$1</h2>')
