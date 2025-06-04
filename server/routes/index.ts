@@ -57,8 +57,8 @@ export function registerRoutes(app: express.Express): void {
   // Mount routes
   console.log('[ROUTES] Mounting routes under /api');
 
-  // Authentication routes (no prefix - they handle their own paths)
-  app.use('/api', authRoutes);
+  // Authentication routes - mount directly on router (not app)
+  router.use('/', authRoutes);
 
   // Other API routes
   router.use('/articles', articleRoutes);
