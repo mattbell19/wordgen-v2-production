@@ -71,156 +71,99 @@ const ContentInitializer = ({ content }: { content: string }) => {
     if (!content) return;
 
     editor.update(() => {
-      const root = $getRoot();
-      
-      // Handle both HTML and markdown-style content
-      if (content.includes('<')) {
-        // HTML content
-        const parser = new DOMParser();
-        const dom = parser.parseFromString(content, 'text/html');
-        
-        // Clear existing content
+      try {
+        const root = $getRoot();
+
+        // Clear existing content first
         root.clear();
 
-        // Process nodes recursively
-        const processNode = (node: Node, parent: ElementNode) => {
-          if (node.nodeType === Node.TEXT_NODE) {
-            const text = node.textContent?.trim();
-            if (text) {
-              const textNode = $createTextNode(text);
-              parent.append(textNode);
-            }
-            return;
-          }
+        // Handle both HTML and markdown-style content
+        if (content.includes('<')) {
+          // HTML content - use a simpler approach
+          const parser = new DOMParser();
+          const dom = parser.parseFromString(content, 'text/html');
 
-          if (node.nodeType !== Node.ELEMENT_NODE) return;
+          // Convert HTML to plain text and create paragraphs
+          const textContent = dom.body.textContent || dom.body.innerText || '';
+          const lines = textContent.split('\n').filter(line => line.trim());
 
-          const element = node as HTMLElement;
-          let lexicalNode: ElementNode | null = null;
-
-          // Create appropriate Lexical node based on HTML element
-          switch (element.tagName.toLowerCase()) {
-            case 'h1':
-            case 'h2':
-            case 'h3':
-              lexicalNode = $createHeadingNode(element.tagName.toLowerCase() as 'h1' | 'h2' | 'h3');
-              break;
-            case 'ul':
-              lexicalNode = $createListNode('bullet');
-              break;
-            case 'ol':
-              lexicalNode = $createListNode('number');
-              break;
-            case 'li':
-              lexicalNode = $createListItemNode();
-              break;
-            case 'div': {
-              const className = element.className;
-              if (className === 'quick-takeaway' || className === 'pro-tip' || className === 'stat-highlight') {
-                lexicalNode = $createQuoteNode();
-              } else {
-                lexicalNode = $createParagraphNode();
+          if (lines.length === 0) {
+            // If no content, create empty paragraph
+            const paragraph = $createParagraphNode();
+            paragraph.append($createTextNode(''));
+            root.append(paragraph);
+          } else {
+            // Create paragraphs for each line
+            lines.forEach(line => {
+              const trimmedLine = line.trim();
+              if (trimmedLine) {
+                const paragraph = $createParagraphNode();
+                paragraph.append($createTextNode(trimmedLine));
+                root.append(paragraph);
               }
-              break;
-            }
-            case 'strong':
-            case 'b': {
-              const textContent = element.textContent;
-              if (textContent) {
-                const textNode = $createTextNode(textContent);
-                textNode.toggleFormat('bold');
-                parent.append(textNode);
-              }
-              return;
-            }
-            case 'em':
-            case 'i': {
-              const textContent = element.textContent;
-              if (textContent) {
-                const textNode = $createTextNode(textContent);
-                textNode.toggleFormat('italic');
-                parent.append(textNode);
-              }
-              return;
-            }
-            case 'u': {
-              const textContent = element.textContent;
-              if (textContent) {
-                const textNode = $createTextNode(textContent);
-                textNode.toggleFormat('underline');
-                parent.append(textNode);
-              }
-              return;
-            }
-            case 'p':
-            default:
-              lexicalNode = $createParagraphNode();
-          }
-
-          if (lexicalNode) {
-            parent.append(lexicalNode);
-            // Process child nodes
-            Array.from(element.childNodes).forEach(child => {
-              processNode(child, lexicalNode!);
             });
           }
-        };
+        } else {
+          // Handle markdown-style content
+          const lines = content.split('\n').filter(line => line.trim());
 
-        // Start processing from body
-        Array.from(dom.body.childNodes).forEach(node => {
-          processNode(node, root);
-        });
-      } else {
-        // Handle markdown-style content
-        const lines = content.split('\n');
-        
-        lines.forEach(line => {
-          // Improved heading detection with more flexible regex patterns
-          const h1Match = line.match(/^\s*#\s+(.+)$/m);
-          if (h1Match) {
-            const heading = $createHeadingNode('h1');
-            heading.append($createTextNode(h1Match[1].trim()));
-            root.append(heading);
-            return;
-          }
-          
-          const h2Match = line.match(/^\s*##\s+(.+)$/m);
-          if (h2Match) {
-            const heading = $createHeadingNode('h2');
-            heading.append($createTextNode(h2Match[1].trim()));
-            root.append(heading);
-            return;
-          }
-          
-          const h3Match = line.match(/^\s*###\s+(.+)$/m);
-          if (h3Match) {
-            const heading = $createHeadingNode('h3');
-            heading.append($createTextNode(h3Match[1].trim()));
-            root.append(heading);
-            return;
-          }
-
-          // Default to paragraph for non-heading content
-          if (line.trim()) {
+          if (lines.length === 0) {
+            // If no content, create empty paragraph
             const paragraph = $createParagraphNode();
-            paragraph.append($createTextNode(line.trim()));
+            paragraph.append($createTextNode(''));
             root.append(paragraph);
+          } else {
+            lines.forEach(line => {
+              const trimmedLine = line.trim();
+              if (!trimmedLine) return;
+
+              // Check for headings
+              const h1Match = trimmedLine.match(/^#\s+(.+)$/);
+              if (h1Match) {
+                const heading = $createHeadingNode('h1');
+                heading.append($createTextNode(h1Match[1].trim()));
+                root.append(heading);
+                return;
+              }
+
+              const h2Match = trimmedLine.match(/^##\s+(.+)$/);
+              if (h2Match) {
+                const heading = $createHeadingNode('h2');
+                heading.append($createTextNode(h2Match[1].trim()));
+                root.append(heading);
+                return;
+              }
+
+              const h3Match = trimmedLine.match(/^###\s+(.+)$/);
+              if (h3Match) {
+                const heading = $createHeadingNode('h3');
+                heading.append($createTextNode(h3Match[1].trim()));
+                root.append(heading);
+                return;
+              }
+
+              // Default to paragraph for regular content
+              const paragraph = $createParagraphNode();
+              paragraph.append($createTextNode(trimmedLine));
+              root.append(paragraph);
+            });
           }
-        });
-      }
+        }
 
-      // Ensure there's always at least one paragraph if no content
-      if (root.getChildren().length === 0) {
+        // Ensure there's always at least one paragraph if no content was added
+        if (root.getChildren().length === 0) {
+          const paragraph = $createParagraphNode();
+          paragraph.append($createTextNode(''));
+          root.append(paragraph);
+        }
+      } catch (error) {
+        console.error('Error initializing editor content:', error);
+        // Fallback: create a simple paragraph with the content as text
+        const root = $getRoot();
+        root.clear();
         const paragraph = $createParagraphNode();
-        const text = $createTextNode('');
-        paragraph.append(text);
+        paragraph.append($createTextNode(content || ''));
         root.append(paragraph);
-      }
-
-      // Select the first text node if it exists
-      const firstNode = root.getFirstDescendant();
-      if (firstNode && $isTextNode(firstNode)) {
-        firstNode.select();
       }
     });
   }, [editor, content]);
@@ -260,7 +203,8 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
     namespace: 'MyEditor',
     theme,
     onError: (error: Error) => {
-      console.error('Editor error:', error);
+      console.error('Lexical Editor error:', error);
+      // Don't throw the error, just log it to prevent crashes
     },
     nodes: [
       HeadingNode,
@@ -269,76 +213,97 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
       LinkNode,
       QuoteNode,
     ],
+    editorState: null, // Start with empty state
   };
 
   // Create debounced onChange function for this component
   const debouncedOnChange = useCallback(
     debounce((editorState: EditorState) => {
-      editorState.read(() => {
-        const root = $getRoot();
-        let html = '';
+      try {
+        editorState.read(() => {
+          const root = $getRoot();
+          let html = '';
 
-        const serializeNode = (node: LexicalNode): string => {
-          if (node instanceof TextNode) {
-            return formatText(node.getTextContent(), node);
-          }
+          const serializeNode = (node: LexicalNode): string => {
+            try {
+              if (node instanceof TextNode) {
+                return formatText(node.getTextContent(), node);
+              }
 
-          if (node instanceof HeadingNode) {
-            const tag = node.getTag();
-            const children = node.getChildren().map(child => serializeNode(child)).join('');
-            return `<${tag}>${children}</${tag}>`;
-          }
+              if (node instanceof HeadingNode) {
+                const tag = node.getTag();
+                const children = node.getChildren().map(child => serializeNode(child)).join('');
+                return `<${tag}>${children}</${tag}>`;
+              }
 
-          if (node instanceof ListNode) {
-            const listType = node.getListType();
-            const tag = listType === 'bullet' ? 'ul' : 'ol';
-            const children = node.getChildren().map(child => serializeNode(child)).join('');
-            return `<${tag}>${children}</${tag}>`;
-          }
+              if (node instanceof ListNode) {
+                const listType = node.getListType();
+                const tag = listType === 'bullet' ? 'ul' : 'ol';
+                const children = node.getChildren().map(child => serializeNode(child)).join('');
+                return `<${tag}>${children}</${tag}>`;
+              }
 
-          if (node instanceof ListItemNode) {
-            const children = node.getChildren().map(child => serializeNode(child)).join('');
-            return `<li>${children}</li>`;
-          }
+              if (node instanceof ListItemNode) {
+                const children = node.getChildren().map(child => serializeNode(child)).join('');
+                return `<li>${children}</li>`;
+              }
 
-          if (node instanceof QuoteNode) {
-            const children = node.getChildren().map(child => serializeNode(child)).join('');
-            return `<blockquote>${children}</blockquote>`;
-          }
+              if (node instanceof QuoteNode) {
+                const children = node.getChildren().map(child => serializeNode(child)).join('');
+                return `<blockquote>${children}</blockquote>`;
+              }
 
-          if (node instanceof ElementNode) {
-            const children = node.getChildren().map(child => serializeNode(child)).join('');
-            return `<p>${children}</p>`;
-          }
+              if (node instanceof ElementNode) {
+                const children = node.getChildren().map(child => serializeNode(child)).join('');
+                return `<p>${children}</p>`;
+              }
 
-          return '';
-        };
-
-        const formatText = (text: string, node: LexicalNode): string => {
-          let formattedText = text;
-
-          if (node instanceof TextNode) {
-            const format = node.getFormat();
-            if (format & 1) { // FORMAT_BOLD = 1
-              formattedText = `<strong>${formattedText}</strong>`;
+              return '';
+            } catch (error) {
+              console.warn('Error serializing node:', error);
+              return node.getTextContent() || '';
             }
-            if (format & 2) { // FORMAT_ITALIC = 2
-              formattedText = `<em>${formattedText}</em>`;
+          };
+
+          const formatText = (text: string, node: LexicalNode): string => {
+            try {
+              let formattedText = text;
+
+              if (node instanceof TextNode) {
+                const format = node.getFormat();
+                if (format & 1) { // FORMAT_BOLD = 1
+                  formattedText = `<strong>${formattedText}</strong>`;
+                }
+                if (format & 2) { // FORMAT_ITALIC = 2
+                  formattedText = `<em>${formattedText}</em>`;
+                }
+                if (format & 4) { // FORMAT_UNDERLINE = 4
+                  formattedText = `<u>${formattedText}</u>`;
+                }
+              }
+
+              return formattedText;
+            } catch (error) {
+              console.warn('Error formatting text:', error);
+              return text;
             }
-            if (format & 4) { // FORMAT_UNDERLINE = 4
-              formattedText = `<u>${formattedText}</u>`;
-            }
+          };
+
+          try {
+            root.getChildren().forEach(node => {
+              html += serializeNode(node);
+            });
+
+            onChange(html);
+          } catch (error) {
+            console.error('Error processing editor content:', error);
+            // Fallback to plain text
+            onChange(root.getTextContent());
           }
-
-          return formattedText;
-        };
-
-        root.getChildren().forEach(node => {
-          html += serializeNode(node);
         });
-
-        onChange(html);
-      });
+      } catch (error) {
+        console.error('Error in onChange handler:', error);
+      }
     }, 300),
     [onChange]
   );
