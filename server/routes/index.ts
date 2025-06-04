@@ -87,7 +87,7 @@ export function registerRoutes(app: express.Express): void {
 
   // Also mount health check at root level
   app.get('/health', healthCheck);
-  app.get('/', healthCheck);
+  // Note: Removed app.get('/', healthCheck) to allow static file serving at root
 
   console.log('[ROUTES] Routes registered successfully');
 
