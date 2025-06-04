@@ -421,7 +421,14 @@ app.get('/api/health', (_req, res) => {
 });
 
 // Register API routes
-registerRoutes(app);
+console.log('[SERVER] About to register routes...');
+try {
+  registerRoutes(app);
+  console.log('[SERVER] Routes registered successfully');
+} catch (error) {
+  console.error('[SERVER] Error registering routes:', error);
+  throw error;
+}
 
 // Serve static files in production AFTER API routes
 if (process.env.NODE_ENV === 'production') {
