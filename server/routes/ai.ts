@@ -29,7 +29,7 @@ router.get('/debug-auth', (req: Request, res: Response) => {
   }, 'Authentication debug information');
 });
 
-// Article generation route with improved error handling
+// Article generation route with async processing to avoid Heroku 30s timeout
 router.post('/article/generate',
   requireAuth,
   async (req: Request, res: Response) => {
@@ -90,25 +90,38 @@ router.post('/article/generate',
       });
 
       try {
+        // Import queue manager
+        const { queueManager } = await import('../services/queue-manager.service');
+
         // Add user ID from authentication
         requestBody.userId = req.user.id;
 
-        // Use a timeout wrapper to prevent Heroku timeout
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Generation timeout')), 45000); // 45 second timeout
+        // Create a single-item queue for async processing
+        const queue = await queueManager.createQueue({
+          userId: req.user.id,
+          totalItems: 1,
+          type: 'single_article_generation',
+          batchName: `Single Article: ${requestBody.keyword || requestBody.title}`
         });
 
-        const generationPromise = generateArticle(requestBody);
+        // Add the article generation task to the queue
+        await queueManager.addItems(queue.id, [{
+          keyword: requestBody.keyword || requestBody.title || 'Untitled',
+          settings: requestBody
+        }]);
 
-        // Race between generation and timeout
-        const article = await Promise.race([generationPromise, timeoutPromise]);
-
-        console.log('[Article Generation] Successfully generated article:', {
-          wordCount: article.wordCount,
-          readingTime: article.readingTime
+        console.log('[Article Generation] Article queued for async processing:', {
+          queueId: queue.id,
+          keyword: requestBody.keyword || requestBody.title
         });
 
-        return ApiResponse.success(res, article, 'Article generated successfully');
+        // Return immediately with queue information for polling
+        return ApiResponse.success(res, {
+          queueId: queue.id,
+          status: 'queued',
+          message: 'Article generation started. Use the queue ID to check progress.',
+          estimatedTime: '30-60 seconds'
+        }, 'Article generation queued successfully');
 
       } catch (error: any) {
         console.error('[Article Generation] Generation error:', {
@@ -143,6 +156,81 @@ router.post('/article/generate',
       return ApiResponse.serverError(res, error.message || 'An unexpected error occurred', 'REQUEST_PROCESSING_ERROR');
     }
 });
+
+// Article generation status route
+router.get('/article/status/:queueId',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return ApiResponse.unauthorized(res, 'Authentication required', 'UNAUTHORIZED');
+      }
+
+      const queueId = parseInt(req.params.queueId);
+      if (isNaN(queueId)) {
+        return ApiResponse.badRequest(res, 'Invalid queue ID', 'INVALID_QUEUE_ID');
+      }
+
+      // Import queue manager
+      const { queueManager } = await import('../services/queue-manager.service');
+
+      // Get queue status
+      const queue = await queueManager.getQueue(queueId);
+      if (!queue) {
+        return ApiResponse.notFound(res, 'Queue not found', 'QUEUE_NOT_FOUND');
+      }
+
+      // Check if user owns this queue
+      if (queue.userId !== req.user.id) {
+        return ApiResponse.forbidden(res, 'Access denied', 'ACCESS_DENIED');
+      }
+
+      // Get articles if completed
+      let articles = [];
+      if (queue.status === 'completed' || queue.status === 'partial') {
+        const { db } = await import('../db');
+        const { articles: articlesTable } = await import('../../db/schema');
+        const { eq, and } = await import('drizzle-orm');
+
+        // Get articles created from this queue
+        articles = await db.query.articles.findMany({
+          where: and(
+            eq(articlesTable.userId, req.user.id),
+            eq(articlesTable.queueId, queueId)
+          ),
+          orderBy: (articles, { desc }) => [desc(articles.createdAt)]
+        });
+      }
+
+      return ApiResponse.success(res, {
+        queue: {
+          id: queue.id,
+          status: queue.status,
+          progress: queue.progress,
+          totalItems: queue.totalItems,
+          completedItems: queue.completedItems,
+          failedItems: queue.failedItems,
+          createdAt: queue.createdAt,
+          updatedAt: queue.updatedAt,
+          completedAt: queue.completedAt,
+          error: queue.error
+        },
+        articles: articles.map(article => ({
+          id: article.id,
+          title: article.title,
+          content: article.content,
+          wordCount: article.wordCount,
+          readingTime: article.readingTime,
+          createdAt: article.createdAt
+        }))
+      }, 'Queue status retrieved successfully');
+
+    } catch (error: any) {
+      console.error('[Article Status] Error:', error);
+      return ApiResponse.serverError(res, 'Failed to get article status', 'STATUS_ERROR');
+    }
+  }
+);
 
 // Add word generation route
 router.post('/words/generate',

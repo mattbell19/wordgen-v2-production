@@ -152,53 +152,60 @@ export function ArticleForm({ onArticleGenerated }: ArticleFormProps) {
           throw new Error(genData.message || genData.error || "Failed to generate article");
         }
 
-        const saveResponse = await fetch('/api/articles', {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            title: formData.keyword,
-            content: genData.data.content,
-            settings: {
-              tone: settings.writingStyle,
-              wordCount: settings.wordCount,
-              language: settings.language,
-              enableInternalLinking: settings.enableInternalLinking,
-              enableExternalLinking: settings.enableExternalLinking
-            },
-            primaryKeyword: formData.keyword
-          }),
-          credentials: 'include',
-        });
+        const queueId = genData.data.queueId;
+        console.log("Article queued with ID:", queueId);
 
-        if (!saveResponse.ok) {
-          let errorMessage = `Failed to save article (${saveResponse.status})`;
-          try {
-            const errorData = await saveResponse.json();
-            errorMessage = errorData.message || errorData.error || errorMessage;
-          } catch (e) {
+        // Poll for completion
+        const pollForCompletion = async (): Promise<any> => {
+          const maxAttempts = 60; // 5 minutes max (5 second intervals)
+          let attempts = 0;
+
+          while (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+            attempts++;
+
             try {
-              const errorText = await saveResponse.text();
-              if (errorText) {
-                errorMessage = `Server error: ${errorText.substring(0, 100)}...`;
+              const statusResponse = await fetch(`/api/ai/article/status/${queueId}`, {
+                credentials: "include",
+              });
+
+              if (!statusResponse.ok) {
+                throw new Error(`Status check failed: ${statusResponse.status}`);
               }
-            } catch (textError) {
-              console.error('Failed to parse error response:', textError);
+
+              const statusData = await statusResponse.json();
+              console.log(`Poll attempt ${attempts}:`, statusData);
+
+              if (statusData.success && statusData.data.queue) {
+                const queue = statusData.data.queue;
+
+                if (queue.status === 'completed') {
+                  // Article generation completed
+                  if (statusData.data.articles && statusData.data.articles.length > 0) {
+                    return statusData.data.articles[0]; // Return the first (and only) article
+                  } else {
+                    throw new Error("Article generation completed but no article found");
+                  }
+                } else if (queue.status === 'failed') {
+                  throw new Error(queue.error || "Article generation failed");
+                }
+                // Continue polling if status is 'pending' or 'processing'
+              }
+            } catch (error) {
+              console.error(`Poll attempt ${attempts} failed:`, error);
+              if (attempts >= maxAttempts) {
+                throw error;
+              }
             }
           }
-          throw new Error(errorMessage);
-        }
 
-        const savedData = await saveResponse.json();
-        console.log('Article save response:', savedData);
+          throw new Error("Article generation timed out after 5 minutes");
+        };
 
-        if (!savedData.success) {
-          throw new Error(savedData.message || savedData.error || 'Failed to save article');
-        }
+        const article = await pollForCompletion();
+        console.log("Article generation completed:", article);
 
-        return genData.data as ArticleResponse;
+        return article as ArticleResponse;
       } catch (error: any) {
         console.error("Article generation/save error:", error instanceof Error ? {
           message: error.message,
@@ -365,7 +372,7 @@ export function ArticleForm({ onArticleGenerated }: ArticleFormProps) {
             {(isSubmitting || generateArticle.isLoading) ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Generating Article...
+                Generating Article (30-60s)...
               </>
             ) : (
               <>
