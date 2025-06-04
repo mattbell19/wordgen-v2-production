@@ -253,9 +253,25 @@ function ToolbarButton({
   );
 }
 
-function EditorContent({ content, onChange }: RichTextEditorProps) {
-  const [editor] = useLexicalComposerContext();
+// Remove the duplicate EditorContent component as it's not being used
 
+export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
+  const initialConfig = {
+    namespace: 'MyEditor',
+    theme,
+    onError: (error: Error) => {
+      console.error('Editor error:', error);
+    },
+    nodes: [
+      HeadingNode,
+      ListNode,
+      ListItemNode,
+      LinkNode,
+      QuoteNode,
+    ],
+  };
+
+  // Create debounced onChange function for this component
   const debouncedOnChange = useCallback(
     debounce((editorState: EditorState) => {
       editorState.read(() => {
@@ -263,43 +279,44 @@ function EditorContent({ content, onChange }: RichTextEditorProps) {
         let html = '';
 
         const serializeNode = (node: LexicalNode): string => {
-          if (node.getType() === 'heading') {
-            const headingNode = node as HeadingNode;
-            const tag = headingNode.getTag();
-            const textContent = node.getTextContent();
-            const formattedContent = formatText(textContent, node);
-            return `<${tag}>${formattedContent}</${tag}>\n`;
-          } else if (node.getType() === 'list') {
-            const listNode = node as ListNode;
-            const tag = listNode.getListType() === 'number' ? 'ol' : 'ul';
-            let listHtml = `<${tag}>\n`;
-            listNode.getChildren().forEach(child => {
-              if (child.getType() === 'listitem') {
-                const textContent = child.getTextContent();
-                const formattedContent = formatText(textContent, child);
-                listHtml += `  <li>${formattedContent}</li>\n`;
-              }
-            });
-            listHtml += `</${tag}>\n`;
-            return listHtml;
-          } else if (node.getType() === 'quote') {
-            const textContent = node.getTextContent();
-            const formattedContent = formatText(textContent, node);
-            return `<div class="quick-takeaway">${formattedContent}</div>\n`;
-          } else if (node.getType() === 'paragraph') {
-            const textContent = node.getTextContent();
-            if (!textContent) {
-              return '<p></p>\n';
-            }
-            const formattedContent = formatText(textContent, node);
-            return `<p>${formattedContent}</p>\n`;
+          if (node instanceof TextNode) {
+            return formatText(node.getTextContent(), node);
           }
+
+          if (node instanceof HeadingNode) {
+            const tag = node.getTag();
+            const children = node.getChildren().map(child => serializeNode(child)).join('');
+            return `<${tag}>${children}</${tag}>`;
+          }
+
+          if (node instanceof ListNode) {
+            const listType = node.getListType();
+            const tag = listType === 'bullet' ? 'ul' : 'ol';
+            const children = node.getChildren().map(child => serializeNode(child)).join('');
+            return `<${tag}>${children}</${tag}>`;
+          }
+
+          if (node instanceof ListItemNode) {
+            const children = node.getChildren().map(child => serializeNode(child)).join('');
+            return `<li>${children}</li>`;
+          }
+
+          if (node instanceof QuoteNode) {
+            const children = node.getChildren().map(child => serializeNode(child)).join('');
+            return `<blockquote>${children}</blockquote>`;
+          }
+
+          if (node instanceof ElementNode) {
+            const children = node.getChildren().map(child => serializeNode(child)).join('');
+            return `<p>${children}</p>`;
+          }
+
           return '';
         };
 
         const formatText = (text: string, node: LexicalNode): string => {
           let formattedText = text;
-          
+
           if (node instanceof TextNode) {
             const format = node.getFormat();
             if (format & 1) { // FORMAT_BOLD = 1
@@ -325,218 +342,6 @@ function EditorContent({ content, onChange }: RichTextEditorProps) {
     }, 300),
     [onChange]
   );
-
-  const onFormatText = useCallback((format: 'bold' | 'italic' | 'underline') => {
-    editor.dispatchCommand(FORMAT_TEXT_COMMAND, format);
-  }, [editor]);
-
-  const onFormatHeading = useCallback((tag: 'h1' | 'h2' | 'h3') => {
-    editor.update(() => {
-      const selection = $getSelection();
-      if ($isRangeSelection(selection)) {
-        const nodes = selection.getNodes();
-        nodes.forEach(node => {
-          const parent = node.getParent();
-          if (parent) {
-            const headingNode = $createHeadingNode(tag);
-            const textNode = $createTextNode(node.getTextContent());
-            headingNode.append(textNode);
-            parent.replace(headingNode);
-            textNode.select();
-          }
-        });
-      }
-    });
-  }, [editor]);
-
-  const onFormatList = useCallback((type: ListType) => {
-    editor.dispatchCommand(
-      type === 'number' ? INSERT_ORDERED_LIST_COMMAND : INSERT_UNORDERED_LIST_COMMAND,
-      undefined
-    );
-  }, [editor]);
-
-  useEffect(() => {
-    if (!content) return;
-
-    editor.update(() => {
-      const root = $getRoot();
-      const parser = new DOMParser();
-      const dom = parser.parseFromString(content, 'text/html');
-
-      // Clear existing content
-      root.clear();
-
-      // Process nodes recursively
-      const processNode = (node: Node, parent: ElementNode) => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          const text = node.textContent?.trim();
-          if (text) {
-            const textNode = $createTextNode(text);
-            parent.append(textNode);
-          }
-          return;
-        }
-
-        if (node.nodeType !== Node.ELEMENT_NODE) return;
-
-        const element = node as HTMLElement;
-        let lexicalNode: ElementNode | null = null;
-
-        // Create appropriate Lexical node based on HTML element
-        switch (element.tagName.toLowerCase()) {
-          case 'h1':
-          case 'h2':
-          case 'h3':
-            lexicalNode = $createHeadingNode(element.tagName.toLowerCase() as 'h1' | 'h2' | 'h3');
-            break;
-          case 'ul':
-            lexicalNode = $createListNode('bullet');
-            break;
-          case 'ol':
-            lexicalNode = $createListNode('number');
-            break;
-          case 'li':
-            lexicalNode = $createListItemNode();
-            break;
-          case 'div': {
-            const className = element.className;
-            if (className === 'quick-takeaway' || className === 'pro-tip' || className === 'stat-highlight') {
-              lexicalNode = $createQuoteNode();
-            } else {
-              lexicalNode = $createParagraphNode();
-            }
-            break;
-          }
-          case 'strong':
-          case 'b': {
-            const textContent = element.textContent;
-            if (textContent) {
-              const textNode = $createTextNode(textContent);
-              textNode.toggleFormat('bold');
-              parent.append(textNode);
-            }
-            return;
-          }
-          case 'em':
-          case 'i': {
-            const textContent = element.textContent;
-            if (textContent) {
-              const textNode = $createTextNode(textContent);
-              textNode.toggleFormat('italic');
-              parent.append(textNode);
-            }
-            return;
-          }
-          case 'u': {
-            const textContent = element.textContent;
-            if (textContent) {
-              const textNode = $createTextNode(textContent);
-              textNode.toggleFormat('underline');
-              parent.append(textNode);
-            }
-            return;
-          }
-          case 'p':
-          default:
-            lexicalNode = $createParagraphNode();
-        }
-
-        if (lexicalNode) {
-          parent.append(lexicalNode);
-          // Process child nodes
-          Array.from(element.childNodes).forEach(child => {
-            processNode(child, lexicalNode!);
-          });
-        }
-      };
-
-      // Start processing from body
-      Array.from(dom.body.childNodes).forEach(node => {
-        processNode(node, root);
-      });
-
-      // Ensure there's always at least one paragraph if no content
-      if (root.getChildren().length === 0) {
-        const paragraph = $createParagraphNode();
-        const text = $createTextNode('');
-        paragraph.append(text);
-        root.append(paragraph);
-      }
-    });
-  }, [editor, content]);
-
-  return (
-    <div className="bg-background text-foreground h-full flex flex-col">
-      <div className="flex-shrink-0 border-b">
-        <div className="border-b p-2 flex flex-wrap gap-1">
-          <ToolbarButton onClick={() => onFormatText('bold')} aria-label="Bold">
-            <BoldIcon className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => onFormatText('italic')} aria-label="Italic">
-            <ItalicIcon className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => onFormatText('underline')} aria-label="Underline">
-            <UnderlineIcon className="h-4 w-4" />
-          </ToolbarButton>
-          <div className="w-px h-8 bg-border mx-1" />
-          <ToolbarButton onClick={() => onFormatHeading('h1')} aria-label="Heading 1">
-            <Heading1Icon className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => onFormatHeading('h2')} aria-label="Heading 2">
-            <Heading2Icon className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => onFormatHeading('h3')} aria-label="Heading 3">
-            <Heading3Icon className="h-4 w-4" />
-          </ToolbarButton>
-          <div className="w-px h-8 bg-border mx-1" />
-          <ToolbarButton onClick={() => onFormatList('bullet')} aria-label="Bullet List">
-            <ListIcon className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => onFormatList('number')} aria-label="Numbered List">
-            <ListOrderedIcon className="h-4 w-4" />
-          </ToolbarButton>
-        </div>
-      </div>
-      <div className="flex-grow relative">
-        <RichTextPlugin
-          contentEditable={
-            <ContentEditable
-              className="outline-none prose prose-sm max-w-none p-4 min-h-[400px] h-full text-foreground bg-background"
-              data-testid="editor-content"
-            />
-          }
-          placeholder={
-            <div className="absolute top-[1.125rem] left-4 text-muted-foreground text-sm pointer-events-none">
-              Start writing...
-            </div>
-          }
-          ErrorBoundary={LexicalErrorBoundary}
-        />
-      </div>
-      <OnChangePlugin onChange={debouncedOnChange} />
-      <HistoryPlugin />
-      <ListPlugin />
-      <LinkPlugin />
-    </div>
-  );
-}
-
-export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
-  const initialConfig = {
-    namespace: 'MyEditor',
-    theme,
-    onError: (error: Error) => {
-      console.error('Editor error:', error);
-    },
-    nodes: [
-      HeadingNode,
-      ListNode,
-      ListItemNode,
-      LinkNode,
-      QuoteNode,
-    ],
-  };
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
@@ -564,14 +369,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
         <ListPlugin />
         <LinkPlugin />
         <ContentInitializer content={content} />
-        <OnChangePlugin
-          onChange={editorState => {
-            editorState.read(() => {
-              const root = $getRoot();
-              debouncedOnChange(root.getTextContent());
-            });
-          }}
-        />
+        <OnChangePlugin onChange={debouncedOnChange} />
       </div>
     </LexicalComposer>
   );
