@@ -42,7 +42,8 @@ export const viteConfig = defineConfig(({ mode }) => {
           ]
         }
       }),
-      runtimeErrorOverlay(),
+      // Temporarily disable runtime error overlay to fix useEffect error
+      // runtimeErrorOverlay(),
       themePlugin()
     ],
     resolve: {

@@ -34,8 +34,8 @@ export interface ContentRequirements {
 }
 
 export class ContentQualityService {
-  private static readonly QUALITY_THRESHOLD = 80; // Increased from 70
-  private static readonly MIN_RETRY_THRESHOLD = 75;
+  private static readonly QUALITY_THRESHOLD = 85; // Increased from 80 for premium quality
+  private static readonly MIN_RETRY_THRESHOLD = 80; // Increased from 75
 
   /**
    * Analyze content quality with enhanced metrics

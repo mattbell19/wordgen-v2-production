@@ -19,21 +19,31 @@ export function QualityMetricsDisplay({
   className = '' 
 }: QualityMetricsDisplayProps) {
   const getScoreColor = (score: number) => {
+    if (score >= 90) return 'text-emerald-600';
     if (score >= 85) return 'text-green-600';
-    if (score >= 70) return 'text-yellow-600';
+    if (score >= 75) return 'text-yellow-600';
     return 'text-red-600';
   };
 
   const getScoreBadgeVariant = (score: number) => {
-    if (score >= 85) return 'default';
-    if (score >= 70) return 'secondary';
+    if (score >= 90) return 'default';
+    if (score >= 85) return 'secondary';
+    if (score >= 75) return 'outline';
     return 'destructive';
   };
 
   const getScoreIcon = (score: number) => {
+    if (score >= 90) return <CheckCircle className="h-4 w-4 text-emerald-600" />;
     if (score >= 85) return <CheckCircle className="h-4 w-4 text-green-600" />;
-    if (score >= 70) return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+    if (score >= 75) return <AlertCircle className="h-4 w-4 text-yellow-600" />;
     return <AlertCircle className="h-4 w-4 text-red-600" />;
+  };
+
+  const getQualityLabel = (score: number) => {
+    if (score >= 90) return 'Premium Quality';
+    if (score >= 85) return 'Excellent Quality';
+    if (score >= 75) return 'Good Quality';
+    return 'Needs Improvement';
   };
 
   const qualityItems = [
@@ -112,9 +122,10 @@ export function QualityMetricsDisplay({
             className="h-2"
           />
           <div className="text-xs text-gray-500">
-            {metrics.overall_score >= 85 && "Excellent quality - ready for publication"}
-            {metrics.overall_score >= 70 && metrics.overall_score < 85 && "Good quality - minor improvements possible"}
-            {metrics.overall_score < 70 && "Needs improvement - consider regenerating"}
+            {metrics.overall_score >= 90 && "🏆 Premium quality - exceptional content ready for publication"}
+            {metrics.overall_score >= 85 && metrics.overall_score < 90 && "✅ Excellent quality - ready for publication"}
+            {metrics.overall_score >= 75 && metrics.overall_score < 85 && "⚠️ Good quality - minor improvements possible"}
+            {metrics.overall_score < 75 && "❌ Needs improvement - consider regenerating with enhanced prompts"}
           </div>
         </div>
 

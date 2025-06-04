@@ -390,28 +390,59 @@ export function ArticleForm({ onArticleGenerated }: ArticleFormProps) {
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">SEO Optimization</span>
-                <div className="flex items-center text-green-600">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  <span className="text-sm font-medium">✓</span>
+            {/* Enhanced Dual Format Quality Features */}
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200">
+              <div className="flex items-center mb-3">
+                <span className="mr-2">🎯</span>
+                <span className="text-sm font-semibold text-purple-700">Dual Format AI System</span>
+              </div>
+              <p className="text-xs text-gray-600 mb-3">
+                Intelligent format selection with 90+ quality targeting and competitor-level standards
+              </p>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Format Selection</span>
+                  <div className="flex items-center text-green-600">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <span className="text-sm font-medium">Auto</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Universal Guide</span>
+                  <div className="flex items-center text-green-600">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <span className="text-sm font-medium">8 Sections</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Technical/Tutorial</span>
+                  <div className="flex items-center text-green-600">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <span className="text-sm font-medium">7 Sections</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Quality Target</span>
+                  <div className="flex items-center text-green-600">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <span className="text-sm font-medium">90+</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Readability</span>
-                <div className="flex items-center text-green-600">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  <span className="text-sm font-medium">✓</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Fact Checking</span>
-                <div className="flex items-center text-green-600">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  <span className="text-sm font-medium">✓</span>
+              {/* Format Examples */}
+              <div className="mt-3 p-2 bg-white rounded border border-purple-100">
+                <div className="text-xs text-gray-600">
+                  <div className="mb-1">
+                    <span className="font-medium text-purple-700">Universal Guide:</span> Tax, legal, financial topics
+                  </div>
+                  <div>
+                    <span className="font-medium text-purple-700">Technical/Tutorial:</span> Specs, how-to, optimization
+                  </div>
                 </div>
               </div>
             </div>

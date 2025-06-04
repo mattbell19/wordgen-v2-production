@@ -167,60 +167,78 @@ export async function generateArticleWithGPT(settings: ArticleSettings): Promise
 - Experience: ${expertPersona.experience}
 - Writing Style: ${expertPersona.writingStyle}
 
-**CONTENT QUALITY REQUIREMENTS (Target Score: 85+/100):**
+**COMPETITOR-LEVEL CONTENT QUALITY REQUIREMENTS (Target Score: 90+/100):**
 
-1. **Expert Authority (Target: 85+)**
-   - Include specific credentials and experience markers
-   - Reference real case studies and examples from your experience
-   - Use industry-specific terminology: ${industryTerminology.slice(0, 5).join(', ')}
-   - Cite specific metrics, ROI data, and performance statistics
-   - Include quotes or insights from industry leaders
+1. **Clarity & Accessibility (Target: 90+)**
+   - Explain complex topics in simple, understandable language
+   - Use clear definitions for technical terms and jargon
+   - Structure information logically from basic to advanced concepts
+   - Include relevant examples that readers can easily relate to
+   - Maintain professional tone while being approachable and helpful
+   - Use industry-specific terminology: ${industryTerminology.slice(0, 5).join(', ')} when appropriate
 
-2. **Actionability (Target: 85+)**
-   - Provide step-by-step implementation guides
-   - Include specific tools and resources: ${expertPersona.credibilityMarkers.slice(0, 3).join(', ')}
-   - Add downloadable templates or checklists
-   - Give concrete next steps and action items
-   - Include implementation timelines and milestones
+2. **Practical Actionability (Target: 90+)**
+   - Provide specific, implementable steps and processes
+   - Include exact figures, rates, and official requirements where relevant
+   - Reference authoritative sources: ${expertPersona.credibilityMarkers.slice(0, 3).join(', ')}
+   - Give clear guidance on documentation and preparation needed
+   - Address common challenges and provide practical solutions
+   - Include both immediate actions and long-term considerations
 
-3. **Specificity (Target: 85+)**
-   - Use specific numbers, percentages, and dollar amounts
-   - Name real companies and case studies
-   - Include exact timeframes and deadlines
-   - Provide specific tool recommendations with versions
-   - Avoid vague language like "many," "some," "often"
+3. **Comprehensive Coverage (Target: 90+)**
+   - Address the topic from multiple relevant angles and perspectives
+   - Include eligibility criteria, processes, and potential challenges
+   - Cover common misconceptions and provide clear corrections
+   - Explain both benefits and limitations honestly
+   - Provide context for why the topic matters to the reader
+   - Include specific examples and real-world scenarios
 
-4. **Current Relevance (Target: 85+)**
-   - Reference 2024 trends and developments
-   - Include latest industry statistics and data
-   - Mention recent events and market changes
-   - Use current examples and case studies
-   - Address emerging challenges and opportunities
+4. **Authority & Credibility (Target: 90+)**
+   - Reference official sources, government agencies, and regulatory bodies
+   - Use current and accurate information with proper context
+   - Include specific rates, deadlines, and official terminology
+   - Mention relevant legislation, policies, or industry standards
+   - Provide balanced perspective that acknowledges complexities
+   - Demonstrate deep understanding of the subject matter
 
-5. **Content Structure & Format:**
-   - Main title: <h1>Title Here</h1>
-   - Major sections: <h2>Section Title</h2>
-   - Subsections: <h3>Subsection Title</h3>
-   - Paragraphs: <p>Content here</p>
-   - Lists: <ul><li>Item</li></ul> or <ol><li>Item</li></ol>
-   - Tables for data: <table><tr><th>Header</th></tr><tr><td>Data</td></tr></table>
-   - External links: <a href="url" target="_blank" rel="noopener noreferrer">anchor text</a>
+5. **Reader-Focused Value (Target: 90+)**
+   - Anticipate and answer likely reader questions proactively
+   - Address common pain points and concerns directly
+   - Provide both overview information and detailed guidance
+   - Include tips for avoiding common mistakes or pitfalls
+   - Offer guidance on when to seek professional help
+   - Make complex processes feel manageable and achievable
 
-6. **Word Count Distribution:**
-   - Introduction: ${introWords} words
-   - Main Content: ${mainContentWords} words
-   - Conclusion: ${conclusionWords} words
-   - References: ${referencesWords} words
+6. **Enhanced Content Structure & Format:**
+   - Main title: <h1>Title Here</h1> (include power words and emotional triggers)
+   - Major sections: <h2>Section Title</h2> (use benefit-driven headings)
+   - Subsections: <h3>Subsection Title</h3> (include numbers and specifics)
+   - Paragraphs: <p>Content here</p> (max 3 sentences, scannable)
+   - Enhanced lists: <ul><li>Item with specific benefit/outcome</li></ul>
+   - Data tables: <table><tr><th>Metric</th><th>Before</th><th>After</th></tr></table>
+   - External links: <a href="url" target="_blank" rel="noopener noreferrer">descriptive anchor text</a>
+   - Call-out boxes: <div class="callout-box">Important insight or tip</div>
+   - Statistics highlights: <div class="stat-highlight">Key statistic with context</div>
 
-**MANDATORY CONTENT SECTIONS:**
-1. **Expert Introduction** - Establish credibility immediately
-2. **Current Market Context** - Include 2024 data and trends
-3. **Common Mistakes Section** - Address these specific mistakes: ${commonMistakes.slice(0, 3).join(', ')}
-4. **Success Metrics & ROI** - Include these metrics: ${successMetrics.slice(0, 3).join(', ')}
-5. **Step-by-Step Implementation Guide** - Actionable steps with timelines
-6. **Tools & Resources Section** - Specific recommendations with links
-7. **Real-World Examples** - At least 3 specific case studies
-8. **Future Trends & Predictions** - What's coming next in ${industryContext.industry}
+7. **Word Count Distribution:**
+   - Introduction: ${introWords} words (hook + credibility + preview)
+   - Main Content: ${mainContentWords} words (detailed implementation)
+   - Conclusion: ${conclusionWords} words (summary + next steps)
+   - References: ${referencesWords} words (authoritative sources)
+
+**MANDATORY ENHANCED CONTENT SECTIONS:**
+1. **Expert Introduction** - Establish credibility with specific achievements and recognition
+2. **Current Market Context** - Include 2024 data, trends, and market analysis with sources
+3. **Common Mistakes Section** - Address these specific mistakes: ${commonMistakes.slice(0, 3).join(', ')} with real examples
+4. **Success Metrics & ROI** - Include these metrics: ${successMetrics.slice(0, 3).join(', ')} with benchmarks
+5. **Step-by-Step Implementation Guide** - Detailed actionable steps with time estimates and success criteria
+6. **Tools & Resources Section** - Specific recommendations with pricing, alternatives, and integration guides
+7. **Real-World Case Studies** - At least 3 detailed examples with company names, challenges, solutions, and results
+8. **Advanced Strategies** - Beyond-basic techniques for experienced practitioners
+9. **Troubleshooting Guide** - Common challenges and solutions during implementation
+10. **Future Trends & Predictions** - What's coming next in ${industryContext.industry} with expert forecasts
+11. **Competitive Analysis** - How this approach compares to alternatives
+12. **ROI Calculator/Framework** - Specific methods to measure success and calculate return
 
 ${realTimeDataPrompt}
 
@@ -257,23 +275,123 @@ IMPORTANT:
         },
         {
           role: 'user',
-          content: `Write a ${settings.wordCount}-word article about "${settings.keyword}" using proper HTML formatting.
+          content: `Write a comprehensive ${settings.wordCount}-word article about "${settings.keyword}" using proper HTML formatting and enhanced visual elements.
 
-Structure:
-1. <h1> title with keyword "${settings.keyword}"
-2. Introduction paragraph
-3. 3-4 main sections with <h2> headings
-4. Conclusion paragraph
-5. Simple reference list
+**INTELLIGENT STRUCTURE SELECTION:**
+First, analyze the keyword "${settings.keyword}" and choose the most appropriate format:
 
-Requirements:
-- Use HTML tags (h1, h2, p, ul, ol)
-- Include keyword "${settings.keyword}" naturally 3-5 times
-- Keep paragraphs short and readable
-- Target approximately ${settings.wordCount} words
-- Professional, informative tone
+**FORMAT A - UNIVERSAL GUIDE STRUCTURE** (Use for: processes, regulations, services, complex topics, legal/financial content):
+1. <h1> "Understanding ${settings.keyword}: A Comprehensive Guide"
+2. "What is ${settings.keyword}?" (200-250 words)
+   - Clear definition and context
+   - Why it matters to the reader
+   - Key benefits or implications
+3. "The basics of ${settings.keyword}" (250-300 words)
+   - Fundamental concepts explained simply
+   - Key terminology and definitions
+   - Important rates, figures, or standards
+4. "Who is eligible/affected by ${settings.keyword}?" (200-250 words)
+   - Specific criteria and requirements
+   - Real-world examples of qualifying situations
+   - Important exclusions or limitations
+5. "The process of [implementing/using] ${settings.keyword}" (400-500 words)
+   - Step-by-step breakdown with H3 subsections
+   - Preparation requirements
+   - Implementation process
+   - Required documentation or tools
+6. "Common misconceptions about ${settings.keyword}" (300-350 words)
+   - "Debunking myths" subsection
+   - "Understanding the realities" subsection
+   - Clear fact vs fiction comparisons
+7. "The impact of ${settings.keyword} on [relevant area]" (250-300 words)
+   - Immediate effects and benefits
+   - Long-term implications
+   - Financial or practical considerations
+8. "Navigating potential challenges with ${settings.keyword}" (200-250 words)
+   - Common issues and solutions
+   - When to seek professional help
+   - Best practices for success
 
-Write the complete article now.`
+**FORMAT B - TECHNICAL/TUTORIAL STRUCTURE** (Use for: technical topics, how-to guides, tools, specifications, sizing, optimization):
+1. <h1> "What is the ${settings.keyword}" or "${settings.keyword}: Complete Guide"
+2. "Understanding ${settings.keyword}" (250-300 words)
+   - Importance and why it matters
+   - Impact on performance/results
+   - Key considerations for success
+3. "[Platform/System] Guidelines for ${settings.keyword}" (200-250 words)
+   - Official requirements and standards
+   - Recommended specifications
+   - Important technical details
+4. "Different Types/Categories of ${settings.keyword}" (400-500 words)
+   - Breakdown by type/category with H3 subsections
+   - Specific requirements for each type
+   - Technical specifications and dimensions
+   - Best practices for each category
+5. "Common Mistakes with ${settings.keyword}" (300-350 words)
+   - "Problems with [oversized/incorrect] approach" subsection
+   - "Issues with [undersized/wrong] method" subsection
+   - Consequences and impact of mistakes
+6. "Optimizing Your ${settings.keyword}" (250-300 words)
+   - Tools and resources for improvement
+   - Tips for high-quality results
+   - Best practices and recommendations
+7. "Frequently Asked Questions About ${settings.keyword}" (200-250 words)
+   - How to check/verify your approach
+   - What to do when things don't work
+   - Troubleshooting common issues
+
+**FORMAT SELECTION CRITERIA:**
+Choose FORMAT A (Universal Guide) for keywords related to:
+- Legal/regulatory topics (tax, compliance, regulations)
+- Financial services (loans, insurance, investments)
+- Business processes (hiring, management, operations)
+- Government services (benefits, applications, permits)
+- Complex procedures (immigration, licensing, certification)
+
+Choose FORMAT B (Technical/Tutorial) for keywords related to:
+- Technical specifications (sizes, dimensions, requirements)
+- Software/platform features (tools, settings, optimization)
+- How-to guides (setup, configuration, implementation)
+- Design/creative topics (templates, formats, standards)
+- Performance optimization (speed, quality, efficiency)
+
+**COMPETITOR-LEVEL CONTENT QUALITY REQUIREMENTS:**
+- Write in clear, accessible language that explains complex topics simply
+- Include specific rates, figures, and official terminology where relevant
+- Reference authoritative sources (government agencies, official bodies, platforms)
+- Provide practical, actionable advice with concrete steps
+- Address common misconceptions and clarify confusing points
+- Use real-world examples and scenarios readers can relate to
+- Maintain professional tone while being approachable and helpful
+- Include both immediate and long-term perspectives on the topic
+
+**ENHANCED VISUAL ELEMENTS (Use Strategically):**
+- <div class="callout-box">Important clarifications or warnings</div>
+- <div class="pro-tip"><h4>Expert Insight</h4><p>Professional advice or insider knowledge</p></div>
+- <div class="quick-takeaway"><h4>Key Point</h4><p>Essential information to remember</p></div>
+- Tables for comparing rates, requirements, specifications, or processes
+- Bulleted lists for step-by-step processes, criteria, or technical specs
+- Clear subsection breaks with H3 headings for complex topics
+
+**WRITING STYLE REQUIREMENTS:**
+- Use HTML tags (h1, h2, h3, p, ul, ol, table, div) properly
+- Include keyword "${settings.keyword}" naturally 4-6 times throughout
+- Write paragraphs of 2-4 sentences for optimal readability
+- Target exactly ${settings.wordCount} words
+- Maintain authoritative yet accessible tone
+- End each section with clear takeaways or next steps
+- Use transition sentences to connect sections smoothly
+- Include specific examples and scenarios throughout
+
+**CRITICAL SUCCESS FACTORS:**
+- Ensure every section provides genuine value to the reader
+- Address the reader's likely questions and concerns proactively
+- Provide both overview and detailed information as needed
+- Make complex processes feel manageable and understandable
+- Include practical tips that readers can implement immediately
+- Match the depth and quality of top-performing competitor content
+
+**IMPORTANT:** Analyze the keyword "${settings.keyword}" and select the most appropriate format (A or B) based on the criteria above. Then write the complete article following that format's structure and maintaining competitor-level quality standards.`
         }
       ],
       temperature: 0.3,
