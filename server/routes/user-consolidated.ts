@@ -9,6 +9,39 @@ import type { Request, Response } from 'express';
 const router = Router();
 
 /**
+ * Get current user information
+ * GET /api/user
+ */
+router.get('/', requireAuth, async (req: Request, res: Response) => {
+  // Always set content type to JSON
+  res.type('application/json');
+
+  try {
+    if (!req.user?.id) {
+      return ApiResponse.unauthorized(res, 'Authentication required', 'SESSION_EXPIRED');
+    }
+
+    const user = req.user;
+    console.log(`[User Info] Getting user data for user ${user.id}`);
+
+    return ApiResponse.success(res, {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      isAdmin: user.isAdmin,
+      subscriptionTier: user.subscriptionTier,
+      articleCreditsRemaining: user.articleCreditsRemaining,
+      createdAt: user.createdAt?.toISOString(),
+      updatedAt: user.updatedAt?.toISOString(),
+      lastLoginDate: user.lastLoginDate?.toISOString()
+    }, "User data retrieved successfully");
+  } catch (error) {
+    console.error('[User Info] Error:', error);
+    return ApiResponse.serverError(res, 'Failed to get user data', 'DATABASE_ERROR');
+  }
+});
+
+/**
  * Get user usage statistics
  * GET /api/user/usage
  */

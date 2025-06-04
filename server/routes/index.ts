@@ -15,6 +15,7 @@ import testRoutes from './test';
 import scrapingRoutes from './scraping';
 import bulkRoutes from './bulk';
 import { authRoutes } from './auth';
+import { teamRoutes } from './teams';
 
 // Configure passport local strategy
 export function registerRoutes(app: express.Express): void {
@@ -66,6 +67,7 @@ export function registerRoutes(app: express.Express): void {
   router.use('/words', wordRoutes);
   router.use('/seo-audit', seoAuditRoutes);
   router.use('/user', userConsolidatedRouter);
+  router.use('/teams', teamRoutes);
   router.use('/gsc', gscRoutes);
   router.use('/gsc-debug', gscDebugRoutes);
   router.use('/gsc-direct', gscDirectRoutes);
