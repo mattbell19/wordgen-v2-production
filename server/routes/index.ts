@@ -21,9 +21,16 @@ import { teamRoutes } from './teams';
 export function registerRoutes(app: express.Express): void {
   try {
     console.log('[ROUTES] Starting routes registration...');
+    console.log('[ROUTES] Checking route imports...');
+
+    // Test imports
+    console.log('[ROUTES] authRoutes:', typeof authRoutes);
+    console.log('[ROUTES] articleRoutes:', typeof articleRoutes);
+    console.log('[ROUTES] userConsolidatedRouter:', typeof userConsolidatedRouter);
 
     // Create router
     const router = Router();
+    console.log('[ROUTES] Router created successfully');
 
   // Log all requests to this router
   router.use((req, res, next) => {
