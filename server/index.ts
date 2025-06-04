@@ -3,7 +3,7 @@ import express from "express";
 import cors from 'cors';
 import morgan from 'morgan';
 import { setupAuth, cleanupAuth } from './auth'
-import { registerRoutes } from './routes'
+import { registerRoutes } from './routes/index'
 import config from './config'
 import { serveStatic } from './static'
 import path from 'path';
@@ -427,6 +427,7 @@ try {
   console.log('[SERVER] Routes registered successfully');
 } catch (error) {
   console.error('[SERVER] Error registering routes:', error);
+  console.error('[SERVER] Error stack:', error.stack);
   throw error;
 }
 

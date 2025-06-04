@@ -21,6 +21,12 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       return ApiResponse.unauthorized(res, 'Authentication required', 'SESSION_EXPIRED');
     }
 
+    // Check if database is available
+    if (!db) {
+      console.warn("Database not available - user info disabled in development");
+      return ApiResponse.error(res, 503, "Database not available. Please deploy to Heroku to test user info.", "DATABASE_UNAVAILABLE");
+    }
+
     const user = req.user;
     console.log(`[User Info] Getting user data for user ${user.id}`);
 

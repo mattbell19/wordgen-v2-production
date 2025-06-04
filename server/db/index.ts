@@ -11,24 +11,53 @@ import { articleQueues, articleQueueItems } from "./queue-schema";
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: isProduction ? {
-    rejectUnauthorized: false // Required for SSL certificate in some hosting environments
-  } : undefined,
-  connectionTimeoutMillis: 5000, // 5 seconds
-  idleTimeoutMillis: 30000, // 30 seconds
-  max: 20 // Maximum number of clients in the pool
-});
+// Create pool with error handling
+let pool: any = null;
+let db: any = null;
 
-// Add error handler for the pool
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-  process.exit(-1);
-});
+function createDatabaseConnection() {
+  if (pool) return { pool, db };
 
-// Create the database instance with schema
-export const db = drizzle(pool, { schema: { ...schema, ...queueSchema } });
+  try {
+    // Check if we have a valid database URL
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('placeholder')) {
+      console.warn('[DB] No valid database URL provided. Database operations will fail gracefully.');
+      return { pool: null, db: null };
+    }
+
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: isProduction ? {
+        rejectUnauthorized: false // Required for SSL certificate in some hosting environments
+      } : undefined,
+      connectionTimeoutMillis: 5000, // 5 seconds
+      idleTimeoutMillis: 30000, // 30 seconds
+      max: 20 // Maximum number of clients in the pool
+    });
+
+    // Add error handler for the pool
+    pool.on('error', (err) => {
+      console.error('Unexpected error on idle client', err);
+      // Don't exit in development
+      if (isProduction) {
+        process.exit(-1);
+      }
+    });
+
+    // Create the database instance with schema
+    db = drizzle(pool, { schema: { ...schema, ...queueSchema } });
+
+    console.log('[DB] Database connection initialized');
+    return { pool, db };
+  } catch (error) {
+    console.error('[DB] Failed to create database connection:', error);
+    return { pool: null, db: null };
+  }
+}
+
+// Initialize database connection
+const { pool: dbPool, db: database } = createDatabaseConnection();
+export { database as db };
 
 // Define queue types
 export type ArticleQueue = typeof articleQueues.$inferSelect & {
@@ -41,10 +70,10 @@ export type SeoAuditTask = typeof schema.seoAuditTasks.$inferSelect & {
 };
 
 // Create query builder with proper types
-const queryBuilderConfig = {
-  ...db,
+const queryBuilderConfig = database ? {
+  ...database,
   query: {
-    ...db.query,
+    ...database.query,
     articleQueues: {
       findMany: async (args?: { 
         where?: SQL<unknown>;
@@ -54,7 +83,8 @@ const queryBuilderConfig = {
         }
       }): Promise<ArticleQueue[]> => {
         const { where, orderBy, with: withRelations } = args || {};
-        const query = db.select().from(articleQueues);
+        if (!database) throw new Error('Database not available');
+        const query = database.select().from(articleQueues);
 
         if (where) query.where(where);
         if (orderBy) query.orderBy(...orderBy);
@@ -64,7 +94,7 @@ const queryBuilderConfig = {
         const result: ArticleQueue[] = await Promise.all(
           queues.map(async (queue) => {
             const items = withRelations?.items
-              ? await db
+              ? await database
                   .select()
                   .from(articleQueueItems)
                   .where(eq(articleQueueItems.queueId, queue.id))
@@ -101,7 +131,8 @@ const queryBuilderConfig = {
         }
       }): Promise<SeoAuditTask[]> => {
         const { where, orderBy, with: withRelations } = args || {};
-        const query = db.select().from(schema.seoAuditTasks);
+        if (!database) throw new Error('Database not available');
+        const query = database.select().from(schema.seoAuditTasks);
         
         if (where) {
           query.where(where);
@@ -115,12 +146,12 @@ const queryBuilderConfig = {
         
         if (withRelations?.results) {
           for (const task of tasks) {
-            const results = await db.select()
+            const results = await database.select()
               .from(schema.seoAuditResults)
               .where(eq(schema.seoAuditResults.taskId, task.id))
               .orderBy(...(withRelations.results.orderBy || [desc(schema.seoAuditResults.createdAt)]))
               .limit(withRelations.results.limit || 1);
-            
+
             (task as SeoAuditTask).results = results;
           }
         }
@@ -137,7 +168,8 @@ const queryBuilderConfig = {
           } 
         }
       }): Promise<SeoAuditTask | null> => {
-        const query = db.select().from(schema.seoAuditTasks);
+        if (!database) throw new Error('Database not available');
+        const query = database.select().from(schema.seoAuditTasks);
         
         if (args?.where) {
           query.where(args.where);
@@ -152,12 +184,12 @@ const queryBuilderConfig = {
         const [task] = await query;
         
         if (task && args?.with?.results) {
-          const results = await db.select()
+          const results = await database.select()
             .from(schema.seoAuditResults)
             .where(eq(schema.seoAuditResults.taskId, task.id))
             .orderBy(...(args.with.results.orderBy || [desc(schema.seoAuditResults.createdAt)]))
             .limit(args.with.results.limit || 1);
-          
+
           (task as SeoAuditTask).results = results;
         }
         
@@ -165,15 +197,18 @@ const queryBuilderConfig = {
       },
     },
   },
-};
+} : null;
 
 export const queryBuilder = queryBuilderConfig;
-export type DB = typeof db;
+export type DB = typeof database;
 
 // Health check function
 export async function checkDatabaseConnection() {
   try {
-    const client = await pool.connect();
+    if (!dbPool) {
+      return { status: 'disconnected', error: 'No database pool available', timestamp: new Date().toISOString() };
+    }
+    const client = await dbPool.connect();
     await client.query('SELECT 1');
     client.release();
     return { status: 'connected', timestamp: new Date().toISOString() };
@@ -186,8 +221,10 @@ export async function checkDatabaseConnection() {
 // Graceful shutdown
 export async function closeDatabaseConnection() {
   try {
-    await pool.end();
-    console.log('Database connection pool closed gracefully');
+    if (dbPool) {
+      await dbPool.end();
+      console.log('Database connection pool closed gracefully');
+    }
   } catch (error) {
     console.error('Error closing database connection pool:', error);
   }

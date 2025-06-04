@@ -43,6 +43,12 @@ router.get('/me', asyncHandler(async (req, res) => {
     return ApiResponse.unauthorized(res, 'Session expired or invalid. Please log in again.', 'SESSION_EXPIRED');
   }
 
+  // Check if database is available
+  if (!db) {
+    console.warn("Database not available - user info disabled in development");
+    return ApiResponse.error(res, 503, "Database not available. Please deploy to Heroku to test user info.", "DATABASE_UNAVAILABLE");
+  }
+
   const user = req.user;
   return ApiResponse.success(res, {
     id: user.id,
@@ -61,6 +67,12 @@ router.post('/login', asyncHandler(async (req, res, next) => {
     email: req.body.email,
     hasPassword: !!req.body.password
   });
+
+  // Check if database is available
+  if (!db) {
+    console.warn("Database not available - login disabled in development");
+    return ApiResponse.error(res, 503, "Database not available. Please deploy to Heroku to test login.", "DATABASE_UNAVAILABLE");
+  }
 
   if (!req.body.email || !req.body.password) {
     return ApiResponse.badRequest(res, "Email and password are required", "INVALID_CREDENTIALS");
@@ -140,7 +152,13 @@ router.post('/login', asyncHandler(async (req, res, next) => {
 // Register route
 router.post('/register', asyncHandler(async (req, res) => {
   console.log("Registration attempt:", req.body.email);
-  
+
+  // Check if database is available
+  if (!db) {
+    console.warn("Database not available - registration disabled in development");
+    return ApiResponse.error(res, 503, "Database not available. Please deploy to Heroku to test registration.", "DATABASE_UNAVAILABLE");
+  }
+
   const result = insertUserSchema.safeParse(req.body);
   if (!result.success) {
     const errors = formatZodErrors(result.error);
@@ -149,18 +167,18 @@ router.post('/register', asyncHandler(async (req, res) => {
 
   const { email, password } = result.data;
 
-  const [existingUser] = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
-
-  if (existingUser) {
-    console.log("Registration failed - email exists:", email);
-    return ApiResponse.badRequest(res, "Email is already registered", "EMAIL_EXISTS");
-  }
-
   try {
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    if (existingUser) {
+      console.log("Registration failed - email exists:", email);
+      return ApiResponse.badRequest(res, "Email is already registered", "EMAIL_EXISTS");
+    }
+
     const hashedPassword = await crypto.hash(password);
     const [newUser] = await db
       .insert(users)

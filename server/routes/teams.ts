@@ -145,6 +145,12 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       return ApiResponse.error(res, 401, 'User not authenticated');
     }
 
+    // Check if database is available
+    if (!db) {
+      console.warn("Database not available - teams disabled in development");
+      return ApiResponse.error(res, 503, "Database not available. Please deploy to Heroku to test teams.", "DATABASE_UNAVAILABLE");
+    }
+
     console.log(`Fetching teams for user ID: ${req.user.id}`);
 
     // Get team IDs where the user is a member OR is the owner

@@ -21,16 +21,9 @@ import { teamRoutes } from './teams';
 export function registerRoutes(app: express.Express): void {
   try {
     console.log('[ROUTES] Starting routes registration...');
-    console.log('[ROUTES] Checking route imports...');
-
-    // Test imports
-    console.log('[ROUTES] authRoutes:', typeof authRoutes);
-    console.log('[ROUTES] articleRoutes:', typeof articleRoutes);
-    console.log('[ROUTES] userConsolidatedRouter:', typeof userConsolidatedRouter);
 
     // Create router
     const router = Router();
-    console.log('[ROUTES] Router created successfully');
 
   // Log all requests to this router
   router.use((req, res, next) => {
@@ -62,9 +55,7 @@ export function registerRoutes(app: express.Express): void {
   console.log('[ROUTES] Mounting routes under /api');
 
   // Authentication routes - mount directly on router (not app)
-  console.log('[ROUTES] Mounting auth routes...');
   router.use('/', authRoutes);
-  console.log('[ROUTES] Auth routes mounted successfully');
 
   // Register health check endpoints (after auth routes to avoid conflicts)
   router.get('/health', healthCheck);
