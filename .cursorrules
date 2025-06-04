@@ -109,7 +109,41 @@ The goal is to help you maintain a big picture as well as the progress of the ta
   4. For testing, mock node-fetch using jest.mock()
   5. Consider using axios as an alternative for better CommonJS/ESM compatibility
 
+- When displaying article content in different contexts:
+  1. Use dangerouslySetInnerHTML for full article views where HTML rendering is needed
+  2. Strip HTML tags for text previews using regex: `/<[^>]*>/g`
+  3. Clean up whitespace and line breaks in text previews: `/\s+/g`
+  4. Create reusable helper functions for consistent text preview handling
+  5. Never display raw HTML content as plain text in user interface components
+  6. Distinguish between preview contexts (need clean text) and full content contexts (need HTML rendering)
+
 # Scratchpad
+
+## Current Task: Fix Article HTML Display Issues
+
+### Problem:
+- When viewing articles in the "My Articles" section and other places, raw HTML content was being displayed instead of properly rendered content
+- Users saw HTML tags instead of formatted text in article previews
+- This issue affected user experience as content appeared broken
+
+### Issues Fixed:
+[X] Fixed ArticleCard component to show clean text preview instead of raw HTML
+[X] Fixed BulkArticleWriter page to show clean text preview instead of raw HTML
+[X] Created reusable getCleanTextPreview function to strip HTML tags from content
+[X] Ensured proper HTML rendering in full article views using dangerouslySetInnerHTML where appropriate
+
+### Changes Made:
+1. Added getCleanTextPreview helper function to ArticleCard component
+2. Updated article content display in ArticleCard to use clean text preview
+3. Added same getCleanTextPreview helper function to BulkArticleWriter page
+4. Updated article preview display in BulkArticleWriter to use clean text preview
+5. Verified that full article views (ArticleDialog, ArticlePreview) already use proper HTML rendering
+
+### Technical Solution:
+- Created helper function that strips HTML tags using regex: `/<[^>]*>/g`
+- Cleans up extra whitespace and line breaks: `/\s+/g`
+- Properly truncates content to desired length
+- Maintains proper rendering in full article views using dangerouslySetInnerHTML
 
 ## Current Task: Fix SEO Audit System Issues
 

@@ -9,6 +9,22 @@ interface ArticleCardProps {
   onSelect?: (article: SelectArticle) => void;
 }
 
+// Helper function to strip HTML tags and get clean text for preview
+const getCleanTextPreview = (htmlContent: string, maxLength: number = 150): string => {
+  // Remove HTML tags
+  const textContent = htmlContent.replace(/<[^>]*>/g, '');
+  
+  // Remove extra whitespace and line breaks
+  const cleanText = textContent.replace(/\s+/g, ' ').trim();
+  
+  // Truncate to desired length
+  if (cleanText.length <= maxLength) {
+    return cleanText;
+  }
+  
+  return cleanText.slice(0, maxLength);
+};
+
 export function ArticleCard({ article, onSelect }: ArticleCardProps) {
   const downloadArticle = (format: 'txt' | 'docx') => {
     const blob = new Blob([article.content], { type: 'text/plain' });
@@ -45,7 +61,7 @@ export function ArticleCard({ article, onSelect }: ArticleCardProps) {
             <span>{article.wordCount} words · {article.readingTime} min read</span>
           </div>
           <p className="text-sm text-muted-foreground line-clamp-3">
-            {article.content.slice(0, 150)}...
+            {getCleanTextPreview(article.content, 150)}...
           </p>
         </div>
       </CardContent>

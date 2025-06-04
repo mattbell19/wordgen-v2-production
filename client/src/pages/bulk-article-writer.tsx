@@ -6,6 +6,22 @@ import { useState } from "react";
 import { ArticleResponse } from "@/lib/types";
 import type { SelectArticle } from "@db/schema";
 
+// Helper function to strip HTML tags and get clean text for preview
+const getCleanTextPreview = (htmlContent: string, maxLength: number = 200): string => {
+  // Remove HTML tags
+  const textContent = htmlContent.replace(/<[^>]*>/g, '');
+  
+  // Remove extra whitespace and line breaks
+  const cleanText = textContent.replace(/\s+/g, ' ').trim();
+  
+  // Truncate to desired length
+  if (cleanText.length <= maxLength) {
+    return cleanText;
+  }
+  
+  return cleanText.slice(0, maxLength);
+};
+
 export default function BulkArticleWriter() {
   const [articles, setArticles] = useState<ArticleResponse[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<SelectArticle | null>(null);
@@ -64,7 +80,7 @@ export default function BulkArticleWriter() {
                         View Full Article
                       </Button>
                     </div>
-                    <p className="text-muted-foreground">{article.content.substring(0, 200)}...</p>
+                    <p className="text-muted-foreground">{getCleanTextPreview(article.content, 200)}...</p>
                   </div>
                 ))}
               </div>
