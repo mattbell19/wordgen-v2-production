@@ -121,21 +121,20 @@ export class QueueManagerService {
         userId: userId as number
       });
 
-      if (!result.ok || !result.article?.id) {
+      if (!result.ok || !result.article) {
         throw new Error(result.error || 'Failed to generate article');
       }
-
-      const articleId = result.article.id;
 
       // Save the article to the database
       const articleData: any = {
         userId: userId as number,
-        title: `${item.keyword} Article`,
+        title: result.article.title || `${item.keyword} Article`,
         content: result.article.content,
-        wordCount: result.article.wordCount,
-        readingTime: Math.ceil(result.article.wordCount / 200),
+        wordCount: result.article.content.split(' ').length, // Calculate word count from content
+        readingTime: Math.ceil(result.article.content.split(' ').length / 200),
         creditsUsed: 1,
-        // Note: queueId not in schema, using primaryKeyword to track source
+        status: 'completed',
+        primaryKeyword: item.keyword,
         settings: {
           keyword: item.keyword,
           tone: item.settings.tone,
