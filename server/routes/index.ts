@@ -19,10 +19,11 @@ import { teamRoutes } from './teams';
 
 // Configure passport local strategy
 export function registerRoutes(app: express.Express): void {
-  console.log('[ROUTES] Starting routes registration...');
+  try {
+    console.log('[ROUTES] Starting routes registration...');
 
-  // Create router
-  const router = Router();
+    // Create router
+    const router = Router();
 
   // Log all requests to this router
   router.use((req, res, next) => {
@@ -54,7 +55,9 @@ export function registerRoutes(app: express.Express): void {
   console.log('[ROUTES] Mounting routes under /api');
 
   // Authentication routes - mount directly on router (not app)
+  console.log('[ROUTES] Mounting auth routes...');
   router.use('/', authRoutes);
+  console.log('[ROUTES] Auth routes mounted successfully');
 
   // Register health check endpoints (after auth routes to avoid conflicts)
   router.get('/health', healthCheck);
@@ -113,4 +116,9 @@ export function registerRoutes(app: express.Express): void {
   console.log('DELETE /api/seo-audit/:taskId');
   console.log('POST /api/seo-audit/instant');
   console.log('POST /api/usage/sync');
+
+  } catch (error) {
+    console.error('[ROUTES] Error during route registration:', error);
+    throw error;
+  }
 }
