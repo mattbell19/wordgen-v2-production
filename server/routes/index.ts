@@ -16,6 +16,10 @@ import scrapingRoutes from './scraping';
 import bulkRoutes from './bulk';
 import { authRoutes } from './auth';
 import { teamRoutes } from './teams';
+import dashboardAnalyticsRouter from './dashboard-analytics';
+import { searchUsageRoutes } from './search-usage';
+import { sitemapRoutes } from './sitemap';
+import { keywordRoutes } from './keywords';
 
 // Configure passport local strategy
 export function registerRoutes(app: express.Express): void {
@@ -74,6 +78,10 @@ export function registerRoutes(app: express.Express): void {
   router.use('/test', testRoutes);
   router.use('/scraping', scrapingRoutes); // Register scraping routes
   router.use('/bulk', bulkRoutes);
+  router.use('/dashboard', dashboardAnalyticsRouter);
+  router.use('/search-usage', searchUsageRoutes);
+  router.use('/sitemap', sitemapRoutes);
+  router.use('/keywords', keywordRoutes);
   console.log('Routes registered');
 
   // Mount all routes under /api

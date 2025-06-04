@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
-import { requireAuth } from '../middlewares/authMiddleware';
+import { requireAuth } from '../middleware/authMiddleware';
 import { searchUsageService } from '../services/search-usage.service';
 import ApiResponse from '../lib/api-response';
 

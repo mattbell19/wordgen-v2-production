@@ -3,7 +3,7 @@ import type { Response, Request } from "express";
 import { db } from "@db";
 import { keywordLists, savedKeywords } from "@db/schema";
 import { eq, inArray } from "drizzle-orm";
-import { requireAuth } from "../middlewares/authMiddleware";
+import { requireAuth } from "../middleware/authMiddleware";
 import { researchKeywords } from "../services/keyword.service";
 import type { KeywordResearchResult } from "@/lib/types";
 import axios from 'axios';
