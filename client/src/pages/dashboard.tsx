@@ -14,6 +14,7 @@ import { fetchJSON } from "@/lib/api-utils";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingState } from "@/components/ui/loading-state";
 import { UsageStat } from "@/components/dashboard/usage-stat";
+import React from "react";
 
 // Interface for chart data
 interface ChartDataPoint {
@@ -393,6 +394,21 @@ function UsageStats() {
     staleTime: 300000, // 5 minutes
     retry: 1, // Only retry once
   });
+
+  // Auto-sync data if usage is available but shows all zeros (indicates new user or stale data)
+  React.useEffect(() => {
+    if (usage && !isLoading && !error) {
+      const hasNoData = usage.totalArticlesGenerated === 0 && 
+                        usage.totalWordCount === 0 && 
+                        usage.totalKeywordsAnalyzed === 0 &&
+                        !usage.lastArticleDate;
+      
+      if (hasNoData) {
+        console.log('No usage data found, triggering automatic sync...');
+        syncUsage.mutate();
+      }
+    }
+  }, [usage, isLoading, error]);
 
   // Remove automatic sync on mount to prevent infinite re-renders
   // Users can manually sync if needed using the sync button

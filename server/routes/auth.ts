@@ -5,13 +5,14 @@ import { ValidationError } from '../lib/error-handler';
 import ApiResponse from '../lib/api-response';
 import { authRateLimiter } from '../middleware/authMiddleware';
 import { formatZodErrors } from '../lib/error-handler';
-import { insertUserSchema, users, passwordResetTokens } from '@db/schema';
+import { insertUserSchema, users, passwordResetTokens, userUsage } from '@db/schema';
 import { db } from '@db';
 import { eq, and, isNull } from 'drizzle-orm';
 import { scrypt, randomBytes, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
 import { z } from 'zod';
 import { sendEmail } from '../services/email';
+import crypto from '../lib/crypto';
 
 const scryptAsync = promisify(scrypt);
 const router = Router();
@@ -195,6 +196,27 @@ router.post('/register', asyncHandler(async (req, res) => {
       .returning();
 
     console.log("User registered successfully:", email);
+
+    // Create initial user usage record
+    await db
+      .insert(userUsage)
+      .values({
+        userId: newUser.id,
+        totalArticlesGenerated: 0,
+        freeArticlesUsed: 0,
+        freeKeywordReportsUsed: 0,
+        totalKeywordsAnalyzed: 0,
+        totalWordCount: 0,
+        articlesUsed: 0,
+        creditsUsed: 0,
+        paygCredits: 0,
+        lastArticleDate: null,
+        lastKeywordDate: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+    console.log("User usage record created for:", email);
 
     // Regenerate session to prevent session fixation
     await new Promise<void>((resolve, reject) => {
