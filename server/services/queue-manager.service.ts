@@ -118,7 +118,7 @@ export class QueueManagerService {
         wordCount: result.article.wordCount,
         readingTime: Math.ceil(result.article.wordCount / 200),
         creditsUsed: 1,
-        queueId: queueId, // Link to the queue
+        // Note: queueId not in schema, using primaryKeyword to track source
         settings: {
           keyword: item.keyword,
           tone: item.settings.tone,
@@ -346,7 +346,14 @@ export class QueueManagerService {
 
   // Alias methods for compatibility with existing code
   public async createQueue(options: { userId: number; totalItems: number; type?: string; batchName?: string }) {
-    return this.createBatch(options.userId, [], options.batchName);
+    // Create the queue without items initially
+    const [queue] = await db.insert(articleQueues).values({
+      userId: options.userId,
+      batchName: options.batchName,
+      totalItems: 0, // Start with 0, will be updated when items are added
+    }).returning();
+
+    return queue;
   }
 
   public async addItems(queueId: number, items: QueueItem[]) {

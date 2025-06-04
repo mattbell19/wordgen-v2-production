@@ -189,17 +189,26 @@ router.get('/article/status/:queueId',
       let articles = [];
       if (queue.status === 'completed' || queue.status === 'partial') {
         const { db } = await import('../db');
-        const { articles: articlesTable } = await import('../../db/schema');
-        const { eq, and } = await import('drizzle-orm');
+        const { articles: articlesTable, articleQueueItems } = await import('../../db/schema');
+        const { eq, and, sql } = await import('drizzle-orm');
 
-        // Get articles created from this queue
-        articles = await db.query.articles.findMany({
-          where: and(
-            eq(articlesTable.userId, req.user.id),
-            eq(articlesTable.queueId, queueId)
-          ),
-          orderBy: (articles, { desc }) => [desc(articles.createdAt)]
-        });
+        // Get articles created from this queue by matching queue items with articles
+        const queueItems = queue.items || [];
+        if (queueItems.length > 0) {
+          const completedItems = queueItems.filter(item => item.status === 'completed' && item.articleId);
+          const articleIds = completedItems.map(item => item.articleId).filter(Boolean);
+
+          if (articleIds.length > 0) {
+            articles = await db.query.articles.findMany({
+              where: and(
+                eq(articlesTable.userId, req.user.id),
+                // Use IN clause to get articles by IDs
+                sql`${articlesTable.id} IN (${articleIds.join(',')})`
+              ),
+              orderBy: (articles, { desc }) => [desc(articles.createdAt)]
+            });
+          }
+        }
       }
 
       return ApiResponse.success(res, {
