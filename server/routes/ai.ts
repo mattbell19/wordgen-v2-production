@@ -189,7 +189,7 @@ router.get('/article/status/:queueId',
       let articles = [];
       if (queue.status === 'completed' || queue.status === 'partial') {
         const { db } = await import('../db');
-        const { articles: articlesTable, articleQueueItems } = await import('../../db/schema');
+        const { articles: articlesTable } = await import('../../db/schema');
         const { eq, and, sql } = await import('drizzle-orm');
 
         // Get articles created from this queue by matching queue items with articles
