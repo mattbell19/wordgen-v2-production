@@ -77,78 +77,88 @@ const ContentInitializer = ({ content }: { content: string }) => {
         // Clear existing content first
         root.clear();
 
-        // Handle both HTML and markdown-style content
-        if (content.includes('<')) {
-          // HTML content - use a simpler approach
-          const parser = new DOMParser();
-          const dom = parser.parseFromString(content, 'text/html');
+        // Use the same content processing logic as the article preview
+        const processedContent = processContentLikePreview(content);
 
-          // Convert HTML to plain text and create paragraphs
-          const textContent = dom.body.textContent || dom.body.innerText || '';
-          const lines = textContent.split('\n').filter(line => line.trim());
+        // Parse the processed HTML content
+        const parser = new DOMParser();
+        const dom = parser.parseFromString(processedContent, 'text/html');
 
-          if (lines.length === 0) {
-            // If no content, create empty paragraph
-            const paragraph = $createParagraphNode();
-            paragraph.append($createTextNode(''));
-            root.append(paragraph);
-          } else {
-            // Create paragraphs for each line
-            lines.forEach(line => {
-              const trimmedLine = line.trim();
-              if (trimmedLine) {
-                const paragraph = $createParagraphNode();
-                paragraph.append($createTextNode(trimmedLine));
-                root.append(paragraph);
-              }
-            });
+        // Process nodes recursively to maintain structure
+        const processNode = (node: Node, parent: ElementNode) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent?.trim();
+            if (text) {
+              const textNode = $createTextNode(text);
+              parent.append(textNode);
+            }
+            return;
           }
-        } else {
-          // Handle markdown-style content
-          const lines = content.split('\n').filter(line => line.trim());
 
-          if (lines.length === 0) {
-            // If no content, create empty paragraph
-            const paragraph = $createParagraphNode();
-            paragraph.append($createTextNode(''));
-            root.append(paragraph);
-          } else {
-            lines.forEach(line => {
-              const trimmedLine = line.trim();
-              if (!trimmedLine) return;
+          if (node.nodeType !== Node.ELEMENT_NODE) return;
 
-              // Check for headings
-              const h1Match = trimmedLine.match(/^#\s+(.+)$/);
-              if (h1Match) {
-                const heading = $createHeadingNode('h1');
-                heading.append($createTextNode(h1Match[1].trim()));
-                root.append(heading);
-                return;
+          const element = node as HTMLElement;
+          let lexicalNode: ElementNode | null = null;
+
+          // Create appropriate Lexical node based on HTML element
+          switch (element.tagName.toLowerCase()) {
+            case 'h1':
+            case 'h2':
+            case 'h3':
+              lexicalNode = $createHeadingNode(element.tagName.toLowerCase() as 'h1' | 'h2' | 'h3');
+              break;
+            case 'ul':
+              lexicalNode = $createListNode('bullet');
+              break;
+            case 'ol':
+              lexicalNode = $createListNode('number');
+              break;
+            case 'li':
+              lexicalNode = $createListItemNode();
+              break;
+            case 'blockquote':
+              lexicalNode = $createQuoteNode();
+              break;
+            case 'div':
+            case 'section': {
+              // For special sections (FAQ, TOC, etc.), create a quote node to preserve them
+              const className = element.className;
+              if (className && (className.includes('faq') || className.includes('toc') || className.includes('takeaway') || className.includes('highlight'))) {
+                lexicalNode = $createQuoteNode();
+              } else {
+                lexicalNode = $createParagraphNode();
               }
-
-              const h2Match = trimmedLine.match(/^##\s+(.+)$/);
-              if (h2Match) {
-                const heading = $createHeadingNode('h2');
-                heading.append($createTextNode(h2Match[1].trim()));
-                root.append(heading);
-                return;
-              }
-
-              const h3Match = trimmedLine.match(/^###\s+(.+)$/);
-              if (h3Match) {
-                const heading = $createHeadingNode('h3');
-                heading.append($createTextNode(h3Match[1].trim()));
-                root.append(heading);
-                return;
-              }
-
-              // Default to paragraph for regular content
-              const paragraph = $createParagraphNode();
-              paragraph.append($createTextNode(trimmedLine));
-              root.append(paragraph);
-            });
+              break;
+            }
+            case 'p':
+            default:
+              lexicalNode = $createParagraphNode();
           }
-        }
+
+          if (lexicalNode) {
+            parent.append(lexicalNode);
+
+            // Handle text formatting within elements
+            if (element.children.length === 0) {
+              // If no child elements, process text content with formatting
+              const textContent = element.textContent || '';
+              if (textContent.trim()) {
+                const textNode = $createTextNode(textContent.trim());
+                lexicalNode.append(textNode);
+              }
+            } else {
+              // Process child nodes
+              Array.from(element.childNodes).forEach(child => {
+                processNode(child, lexicalNode!);
+              });
+            }
+          }
+        };
+
+        // Start processing from body
+        Array.from(dom.body.childNodes).forEach(node => {
+          processNode(node, root);
+        });
 
         // Ensure there's always at least one paragraph if no content was added
         if (root.getChildren().length === 0) {
@@ -169,6 +179,59 @@ const ContentInitializer = ({ content }: { content: string }) => {
   }, [editor, content]);
 
   return null;
+};
+
+// Helper function to process content the same way as article preview
+const processContentLikePreview = (content: string): string => {
+  // Clean the content first - remove any stray quotes or malformed JSON artifacts
+  let cleanedContent = content;
+
+  // Remove any leading/trailing quotes that might be from JSON parsing issues
+  cleanedContent = cleanedContent.replace(/^["']|["']$/g, '');
+
+  // Remove any stray "html or 'html at the beginning
+  cleanedContent = cleanedContent.replace(/^["']?html["']?\s*/i, '');
+
+  // Remove any other common JSON artifacts
+  cleanedContent = cleanedContent.replace(/^```html\s*/i, '');
+  cleanedContent = cleanedContent.replace(/\s*```$/i, '');
+
+  // Remove any escaped quotes that might be causing issues
+  cleanedContent = cleanedContent.replace(/\\"/g, '"');
+  cleanedContent = cleanedContent.replace(/\\'/g, "'");
+
+  // Remove any leading whitespace or newlines
+  cleanedContent = cleanedContent.trim();
+
+  // If content already contains HTML, return it as is
+  if (cleanedContent.includes('<div') || cleanedContent.includes('<section') || cleanedContent.includes('<h1') || cleanedContent.includes('<h2')) {
+    return cleanedContent;
+  }
+
+  // Convert markdown headings to HTML
+  let htmlContent = cleanedContent
+    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+    // Convert markdown links to HTML
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+      const isExternal = url.startsWith('http') || url.startsWith('www');
+      return `<a href="${url}"${isExternal ? ' target="_blank" rel="noopener noreferrer"' : ''}>${text}</a>`;
+    })
+    // Convert newlines to paragraphs
+    .split('\n\n')
+    .map(paragraph => paragraph.trim())
+    .filter(paragraph => paragraph.length > 0)
+    .map(paragraph => {
+      // Don't wrap headings in paragraphs
+      if (paragraph.startsWith('<h1') || paragraph.startsWith('<h2') || paragraph.startsWith('<h3')) {
+        return paragraph;
+      }
+      return `<p>${paragraph}</p>`;
+    })
+    .join('\n');
+
+  return htmlContent;
 };
 
 interface RichTextEditorProps {
@@ -233,29 +296,43 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
               if (node instanceof HeadingNode) {
                 const tag = node.getTag();
                 const children = node.getChildren().map(child => serializeNode(child)).join('');
-                return `<${tag}>${children}</${tag}>`;
+                return `<${tag}>${children}</${tag}>\n`;
               }
 
               if (node instanceof ListNode) {
                 const listType = node.getListType();
                 const tag = listType === 'bullet' ? 'ul' : 'ol';
                 const children = node.getChildren().map(child => serializeNode(child)).join('');
-                return `<${tag}>${children}</${tag}>`;
+                return `<${tag}>\n${children}</${tag}>\n`;
               }
 
               if (node instanceof ListItemNode) {
                 const children = node.getChildren().map(child => serializeNode(child)).join('');
-                return `<li>${children}</li>`;
+                return `  <li>${children}</li>\n`;
               }
 
               if (node instanceof QuoteNode) {
                 const children = node.getChildren().map(child => serializeNode(child)).join('');
-                return `<blockquote>${children}</blockquote>`;
+                const textContent = children.trim();
+
+                // Try to preserve special section formatting
+                if (textContent.toLowerCase().includes('faq') || textContent.toLowerCase().includes('frequently asked')) {
+                  return `<div class="faq-section">${children}</div>\n`;
+                } else if (textContent.toLowerCase().includes('table of contents') || textContent.toLowerCase().includes('toc')) {
+                  return `<div class="toc-section">${children}</div>\n`;
+                } else if (textContent.toLowerCase().includes('takeaway') || textContent.toLowerCase().includes('key point')) {
+                  return `<div class="quick-takeaway">${children}</div>\n`;
+                } else {
+                  return `<blockquote>${children}</blockquote>\n`;
+                }
               }
 
               if (node instanceof ElementNode) {
                 const children = node.getChildren().map(child => serializeNode(child)).join('');
-                return `<p>${children}</p>`;
+                if (children.trim()) {
+                  return `<p>${children}</p>\n`;
+                }
+                return '';
               }
 
               return '';
@@ -294,6 +371,9 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
               html += serializeNode(node);
             });
 
+            // Clean up extra newlines
+            html = html.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+
             onChange(html);
           } catch (error) {
             console.error('Error processing editor content:', error);
@@ -311,6 +391,164 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
   return (
     <LexicalComposer initialConfig={initialConfig}>
       <div className="bg-background text-foreground h-full flex flex-col">
+        {/* Apply the same article styles as the preview */}
+        <style>{`
+          /* Base article container */
+          .rich-text-content {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+          }
+
+          /* Main heading styles */
+          .rich-text-content h1 {
+            font-size: 2.75rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #000000;
+            line-height: 1.1;
+            letter-spacing: -0.025em;
+            font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
+          }
+
+          /* Section heading styles */
+          .rich-text-content h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            color: #000000;
+            line-height: 1.25;
+            letter-spacing: -0.015em;
+            font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
+          }
+
+          /* Subsection heading styles */
+          .rich-text-content h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            color: #000000;
+            line-height: 1.35;
+            letter-spacing: -0.01em;
+            font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
+          }
+
+          /* Paragraph styles - Enhanced for readability */
+          .rich-text-content p {
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+            color: #374151;
+            font-size: 1.125rem;
+            font-weight: 400;
+            letter-spacing: 0.01em;
+          }
+
+          /* List styles */
+          .rich-text-content ul,
+          .rich-text-content ol {
+            margin: 1.5rem 0;
+            padding-left: 1.5rem;
+          }
+
+          .rich-text-content ul {
+            list-style-type: disc;
+          }
+
+          .rich-text-content ol {
+            list-style-type: decimal;
+          }
+
+          .rich-text-content li {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+            font-size: 1.125rem;
+            color: #374151;
+          }
+
+          .rich-text-content li::marker {
+            color: #6b7280;
+          }
+
+          /* Enhanced link styles */
+          .rich-text-content a {
+            color: #2563eb;
+            text-decoration: none;
+            border-bottom: 1px solid #93c5fd;
+            transition: all 0.2s ease;
+            font-weight: 500;
+          }
+
+          .rich-text-content a:hover {
+            color: #1d4ed8;
+            border-bottom-color: #2563eb;
+            background-color: rgba(37, 99, 235, 0.05);
+          }
+
+          /* Enhanced emphasis styles */
+          .rich-text-content strong {
+            font-weight: 600;
+            color: #111827;
+          }
+
+          .rich-text-content em {
+            font-style: italic;
+            color: #4b5563;
+          }
+
+          /* Enhanced blockquote styles */
+          .rich-text-content blockquote {
+            border-left: 4px solid #3b82f6;
+            padding-left: 1.5rem;
+            margin: 2rem 0;
+            color: #4b5563;
+            font-style: italic;
+            font-size: 1.125rem;
+            line-height: 1.6;
+            background-color: rgba(59, 130, 246, 0.05);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+          }
+
+          /* Special section styles */
+          .rich-text-content .faq-section,
+          .rich-text-content .toc-section,
+          .rich-text-content .quick-takeaway {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+          }
+
+          /* Responsive typography */
+          @media (max-width: 768px) {
+            .rich-text-content h1 {
+              font-size: 2.25rem;
+              line-height: 1.2;
+            }
+
+            .rich-text-content h2 {
+              font-size: 1.75rem;
+              margin-top: 2rem;
+            }
+
+            .rich-text-content h3 {
+              font-size: 1.375rem;
+              margin-top: 1.5rem;
+            }
+
+            .rich-text-content p,
+            .rich-text-content li {
+              font-size: 1rem;
+              line-height: 1.65;
+            }
+          }
+        `}</style>
+
         <div className="flex-shrink-0 border-b sticky top-0 z-10 bg-background shadow-sm">
           <ToolbarPlugin />
         </div>
@@ -318,7 +556,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           <RichTextPlugin
             contentEditable={
               <ContentEditable
-                className="outline-none prose prose-sm max-w-none p-4 min-h-[400px] h-full text-foreground bg-background rich-text-content"
+                className="outline-none prose prose-lg max-w-none p-4 min-h-[400px] h-full text-foreground bg-background rich-text-content"
                 style={{ resize: 'none' }}
               />
             }
