@@ -20,6 +20,7 @@ import dashboardAnalyticsRouter from './dashboard-analytics';
 import { searchUsageRoutes } from './search-usage';
 import { sitemapRoutes } from './sitemap';
 import { keywordRoutes } from './keywords';
+import { projectRoutes } from './projects';
 
 // Configure passport local strategy
 export function registerRoutes(app: express.Express): void {
@@ -82,6 +83,7 @@ export function registerRoutes(app: express.Express): void {
   router.use('/search-usage', searchUsageRoutes);
   router.use('/sitemap', sitemapRoutes);
   router.use('/keywords', keywordRoutes);
+  router.use('/projects', projectRoutes);
   console.log('Routes registered');
 
   // Mount all routes under /api

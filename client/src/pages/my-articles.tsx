@@ -77,6 +77,31 @@ export default function MyArticles() {
 
   const { data: projectsResponse, isLoading: isLoadingProjects, error: projectsError } = useQuery<ApiResponse<SelectProject[]>>({
     queryKey: ['/api/projects'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/projects', {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.message || `Failed to fetch projects: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to fetch projects');
+        }
+
+        return data;
+      } catch (err) {
+        console.error('Projects fetch error:', err);
+        throw err;
+      }
+    },
     retry: false,
     staleTime: Infinity
   });
