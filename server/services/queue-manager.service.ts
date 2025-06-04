@@ -57,13 +57,30 @@ export class QueueManagerService {
 
   // Get a queue by ID
   public async getQueue(queueId: number) {
-    const queue = await db.query.articleQueues.findFirst({
-      where: eq(articleQueues.id, queueId),
-      with: {
-        items: true,
-      },
-    });
-    return queue;
+    try {
+      // Get the queue first
+      const [queue] = await db
+        .select()
+        .from(articleQueues)
+        .where(eq(articleQueues.id, queueId))
+        .limit(1);
+
+      if (!queue) return null;
+
+      // Get the queue items
+      const items = await db
+        .select()
+        .from(articleQueueItems)
+        .where(eq(articleQueueItems.queueId, queueId));
+
+      return {
+        ...queue,
+        items
+      };
+    } catch (error) {
+      console.error('[Queue Manager] Error getting queue:', error);
+      return null;
+    }
   }
 
   // Get all queues for a user

@@ -1,4 +1,5 @@
 import { pgTable, serial, text, timestamp, integer, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { users, articles } from "../../db/schema";
 import type { ArticleSettings } from "@/lib/types";
 
@@ -28,3 +29,23 @@ export const articleQueueItems = pgTable("article_queue_items", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// Define relations
+export const articleQueuesRelations = relations(articleQueues, ({ many, one }) => ({
+  items: many(articleQueueItems),
+  user: one(users, {
+    fields: [articleQueues.userId],
+    references: [users.id],
+  }),
+}));
+
+export const articleQueueItemsRelations = relations(articleQueueItems, ({ one }) => ({
+  queue: one(articleQueues, {
+    fields: [articleQueueItems.queueId],
+    references: [articleQueues.id],
+  }),
+  article: one(articles, {
+    fields: [articleQueueItems.articleId],
+    references: [articles.id],
+  }),
+}));

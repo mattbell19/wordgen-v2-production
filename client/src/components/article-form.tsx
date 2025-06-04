@@ -157,11 +157,11 @@ export function ArticleForm({ onArticleGenerated }: ArticleFormProps) {
 
         // Poll for completion
         const pollForCompletion = async (): Promise<any> => {
-          const maxAttempts = 60; // 5 minutes max (5 second intervals)
+          const maxAttempts = 30; // 5 minutes max (10 second intervals)
           let attempts = 0;
 
           while (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+            await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
             attempts++;
 
             try {
@@ -170,6 +170,11 @@ export function ArticleForm({ onArticleGenerated }: ArticleFormProps) {
               });
 
               if (!statusResponse.ok) {
+                // If we get 401, the session expired, just continue polling
+                if (statusResponse.status === 401) {
+                  console.log(`Poll attempt ${attempts}: Session expired, continuing...`);
+                  continue;
+                }
                 throw new Error(`Status check failed: ${statusResponse.status}`);
               }
 
@@ -193,6 +198,10 @@ export function ArticleForm({ onArticleGenerated }: ArticleFormProps) {
               }
             } catch (error) {
               console.error(`Poll attempt ${attempts} failed:`, error);
+              // For 401 errors, continue polling
+              if (error.message?.includes('401')) {
+                continue;
+              }
               if (attempts >= maxAttempts) {
                 throw error;
               }
