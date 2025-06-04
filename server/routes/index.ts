@@ -50,15 +50,14 @@ export function registerRoutes(app: express.Express): void {
     });
   };
 
-  // Register health check endpoints
-  router.get('/health', healthCheck);
-  router.get('/', healthCheck);
-
   // Mount routes
   console.log('[ROUTES] Mounting routes under /api');
 
   // Authentication routes - mount directly on router (not app)
   router.use('/', authRoutes);
+
+  // Register health check endpoints (after auth routes to avoid conflicts)
+  router.get('/health', healthCheck);
 
   // Other API routes
   router.use('/articles', articleRoutes);
