@@ -7,10 +7,18 @@ import { articles, projects } from '../../db/schema';
 import { ArticleService } from './article.service';
 import type { ArticleSettings } from '@/lib/types';
 import type { ArticleServiceResponse } from './article.service';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type { PgTransaction } from 'drizzle-orm/pg-core';
 
 interface QueueItem {
   keyword: string;
-  settings: ArticleSettings;
+  settings: ArticleSettings & {
+    projectId?: number;
+  };
+}
+
+interface QueueTransaction extends PgTransaction {
+  execute: (query: string) => Promise<any>;
 }
 
 export class QueueManagerService {
@@ -19,6 +27,9 @@ export class QueueManagerService {
   private isProcessing: boolean = false;
   private concurrencyLimit = pLimit(3); // Process 3 articles at a time
   private articleService: ArticleService;
+  private retryCount: number = 0;
+  private maxRetries: number = 5;
+  private retryDelay: number = 5000; // 5 seconds
 
   private constructor() {
     this.eventEmitter = new EventEmitter();
@@ -106,7 +117,7 @@ export class QueueManagerService {
 
       // Get user ID and project ID from settings
       const userId = item.settings.userId;
-      const projectId = item.settings.projectId;
+      const projectId = (item.settings as QueueItem['settings']).projectId;
 
       if (!userId) {
         throw new Error('Missing user ID in settings');
@@ -130,7 +141,7 @@ export class QueueManagerService {
         userId: userId as number,
         title: result.article.title || `${item.keyword} Article`,
         content: result.article.content,
-        wordCount: result.article.content.split(' ').length, // Calculate word count from content
+        wordCount: result.article.content.split(' ').length,
         readingTime: Math.ceil(result.article.content.split(' ').length / 200),
         creditsUsed: 1,
         status: 'completed',
@@ -144,7 +155,7 @@ export class QueueManagerService {
 
       // Only add projectId if it exists
       if (projectId) {
-        articleData.projectId = projectId as number;
+        articleData.projectId = projectId;
       }
 
       const [savedArticle] = await db.insert(articles)
@@ -152,7 +163,7 @@ export class QueueManagerService {
         .returning();
 
       // Update item with success and track credit usage
-      await db.transaction(async (tx) => {
+      await db.transaction(async (tx: QueueTransaction) => {
         // Update queue item
         await tx
           .update(articleQueueItems)
@@ -178,7 +189,7 @@ export class QueueManagerService {
               completedKeywords: sql`${projects.completedKeywords} + 1`,
               updatedAt: new Date()
             })
-            .where(eq(projects.id, projectId as number));
+            .where(eq(projects.id, projectId));
         }
 
         // Track credit usage
@@ -194,7 +205,7 @@ export class QueueManagerService {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       // Update item with error
-      await db.transaction(async (tx) => {
+      await db.transaction(async (tx: QueueTransaction) => {
         await tx
           .update(articleQueueItems)
           .set({
@@ -284,7 +295,7 @@ export class QueueManagerService {
               status: allCompleted ? 'completed' : anyFailed ? 'partial' : 'completed',
               updatedAt: new Date()
             })
-            .where(eq(projects.id, projectId as number));
+            .where(eq(projects.id, projectId));
         }
       });
 
@@ -319,28 +330,57 @@ export class QueueManagerService {
     if (this.isProcessing) return;
 
     this.isProcessing = true;
+    this.retryCount = 0;
 
     try {
       while (true) {
-        // Find the next pending queue
-        const [nextQueue] = await db
-          .select()
-          .from(articleQueues)
-          .where(eq(articleQueues.status, 'pending'))
-          .orderBy(articleQueues.createdAt)
-          .limit(1);
+        try {
+          // Ensure database connection is available
+          if (!db) {
+            console.error('[Queue Manager] No database connection available');
+            throw new Error('Database connection not available');
+          }
 
-        if (!nextQueue) {
-          // No pending queues, wait for 5 seconds before checking again
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          continue;
+          // Find the next pending queue
+          const [nextQueue] = await db
+            .select()
+            .from(articleQueues)
+            .where(eq(articleQueues.status, 'pending'))
+            .orderBy(articleQueues.createdAt)
+            .limit(1);
+
+          if (!nextQueue) {
+            // No pending queues, wait for 5 seconds before checking again
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+            continue;
+          }
+
+          // Process the queue
+          await this.processQueue(nextQueue.id);
+
+          // Reset retry count on successful operation
+          this.retryCount = 0;
+        } catch (error: unknown) {
+          console.error('[Queue Manager] Error in queue processor:', error);
+          
+          // Increment retry count
+          this.retryCount++;
+          
+          if (this.retryCount >= this.maxRetries) {
+            console.error('[Queue Manager] Max retries reached, stopping queue processor');
+            this.isProcessing = false;
+            break;
+          }
+          
+          // Wait before retrying
+          const delay = this.retryDelay * Math.pow(2, this.retryCount - 1); // Exponential backoff
+          console.log(`[Queue Manager] Retrying in ${delay}ms (attempt ${this.retryCount} of ${this.maxRetries})`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
-
-        // Process the queue
-        await this.processQueue(nextQueue.id);
       }
-    } catch (error) {
-      console.error('Queue processor error:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[Queue Manager] Fatal error in queue processor:', errorMessage);
       this.isProcessing = false;
       // Restart the processor after a delay
       setTimeout(() => this.startQueueProcessor(), 5000);
