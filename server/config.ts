@@ -5,14 +5,16 @@ import { dirname, resolve } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables from .env file
-dotenvConfig({ path: resolve(__dirname, '../.env') });
+// Only load .env file in development
+if (process.env.NODE_ENV !== 'production') {
+  dotenvConfig({ path: resolve(__dirname, '../.env') });
+}
 
 // Debug environment variables
 console.log('[CONFIG] Environment:', {
   NODE_ENV: process.env.NODE_ENV,
   hasRapidApiKey: !!process.env.RAPIDAPI_KEY,
-  envPath: resolve(__dirname, '../.env')
+  envPath: process.env.NODE_ENV === 'production' ? 'Using Heroku env vars' : resolve(__dirname, '../.env')
 });
 
 // Environment validation
