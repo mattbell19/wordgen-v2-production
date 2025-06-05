@@ -117,9 +117,63 @@ The goal is to help you maintain a big picture as well as the progress of the ta
   5. Never display raw HTML content as plain text in user interface components
   6. Distinguish between preview contexts (need clean text) and full content contexts (need HTML rendering)
 
+- Google Search Console Integration best practices:
+  1. Never hardcode OAuth redirect URIs in client-side code
+  2. Always use the server-generated auth URL that respects environment variables
+  3. The redirect URI must match exactly what's configured in Google Cloud Console
+  4. Use the API endpoint to generate auth URLs with proper state parameters
+  5. Handle OAuth callbacks on the server side for security
+  6. Store tokens securely in the database with proper encryption
+  7. Implement token refresh logic to maintain long-term access
+  8. The OAuth flow should be: Client -> Server Auth URL -> Google -> Server Callback -> Client Redirect
+
 # Scratchpad
 
-## Current Task: Fix Article HTML Display Issues
+## Current Task: Check Google Search Console Integration
+
+### Investigation Summary:
+[X] Examined the search console implementation
+[X] Found hardcoded localhost URL in ConnectGSC component
+[X] Fixed the component to use proper API auth URL generation
+[X] Documented lessons learned about OAuth flow
+
+### Key Findings:
+1. The search console integration uses OAuth 2.0 flow with Google
+2. Server endpoints handle the OAuth flow properly:
+   - `/api/gsc/auth` - Generates auth URL with proper redirect URI
+   - `/api/gsc/callback` - Handles OAuth callback
+   - `/api/gsc/status` - Checks connection status
+   - `/api/gsc/sites` - Gets user's Search Console sites
+   - `/api/gsc/performance` - Gets search analytics data
+
+3. The integration supports:
+   - Multiple sites per user
+   - Default site selection
+   - Performance data caching
+   - Token refresh mechanism
+   - Search analytics queries (keywords, pages, etc.)
+
+4. Fixed Issue:
+   - ConnectGSC component was using hardcoded localhost URL
+   - Changed to use the getAuthUrl mutation which calls the API
+   - This ensures the redirect URI matches the environment configuration
+
+### How the Integration Works:
+1. User clicks "Connect to Google Search Console"
+2. Frontend calls `/api/gsc/auth` to get OAuth URL
+3. Server generates URL with proper redirect URI from env vars
+4. User authorizes in Google's OAuth flow
+5. Google redirects to `/api/gsc/callback` with auth code
+6. Server exchanges code for tokens and saves them
+7. Server fetches user's Search Console sites
+8. User is redirected back to dashboard with success
+
+The integration appears to be fully implemented and should work properly once the environment variables are configured correctly with:
+- GOOGLE_CLIENT_ID
+- GOOGLE_CLIENT_SECRET  
+- GOOGLE_REDIRECT_URI (must match Google Cloud Console configuration)
+
+## Previous Task: Fix Article HTML Display Issues
 
 ### Problem:
 - When viewing articles in the "My Articles" section and other places, raw HTML content was being displayed instead of properly rendered content
