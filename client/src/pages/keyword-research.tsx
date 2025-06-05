@@ -58,9 +58,11 @@ interface KeywordList {
 }
 
 const formSchema = z.object({
-  search_question: z.string().min(2, "Keyword must be at least 2 characters").max(100),
-  search_country: z.string().default("en-US"),
+  search_question: z.string().min(1, "Please enter a search query"),
+  market: z.string().min(1, "Please select a target market")
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 const saveListSchema = z.object({
   listId: z.string().optional(),
@@ -75,6 +77,20 @@ const saveListSchema = z.object({
   }
 });
 
+interface ApiError {
+  message: string;
+}
+
+interface KeywordResearchResponse {
+  success: boolean;
+  data: KeywordResearchResult[];
+}
+
+interface SaveKeywordsResponse {
+  success: boolean;
+  listId: number;
+}
+
 export default function KeywordResearch() {
   const { toast } = useToast();
   const [results, setResults] = useState<KeywordResearchResult[]>([]);
@@ -87,12 +103,12 @@ export default function KeywordResearch() {
     queryKey: ["/api/keywords/lists"],
   });
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       search_question: "",
-      search_country: "en-US",
-    },
+      market: "us"
+    }
   });
 
   const saveForm = useForm<z.infer<typeof saveListSchema>>({
@@ -103,44 +119,20 @@ export default function KeywordResearch() {
     },
   });
 
-  const researchKeywords = useMutation({
-    mutationFn: async (data: z.infer<typeof formSchema>) => {
-      console.log("[Client] Starting keyword research with data:", data);
-
-      const response = await fetch(`/api/keywords/rapid-research?keyword=${encodeURIComponent(data.search_question)}&location=${encodeURIComponent(data.search_country)}`, {
-        method: "GET",
-        headers: {
-          "Accept": "application/json"
-        },
-        credentials: 'include'
+  const researchKeywords = useMutation<KeywordResearchResponse, ApiError, FormValues>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/keyword-research", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
       });
-
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        const error = await response.json();
+        throw new Error(error.message || "Failed to research keywords");
       }
-
-      const responseData = await response.json();
-      console.log("[Client] Received response data:", responseData);
-
-      // Transform the data to match our expected format
-      const transformedData = responseData.data.map((item: any) => ({
-        keyword: item.text,
-        searchVolume: item.volume || 0,
-        difficulty: Math.round((item.competition_index || 0) * 100 / 100),
-        competition: item.competition_level === 'HIGH' ? 100 : 
-                    item.competition_level === 'MEDIUM' ? 50 : 
-                    item.competition_level === 'LOW' ? 25 : 0,
-        relatedKeywords: []
-      }));
-
-      return {
-        success: true,
-        data: transformedData
-      };
+      return response.json();
     },
     onSuccess: (data) => {
-      console.log("[Client] Successfully received keyword data:", data);
       setResults(data.data);
       setSelectedKeywords(new Set());
       toast({
@@ -148,48 +140,43 @@ export default function KeywordResearch() {
         description: `Found ${data.data.length} related keywords for your search.`,
       });
     },
-    onError: (error: Error) => {
-      console.error("[Client] Mutation Error:", error);
+    onError: (error) => {
       toast({
         title: "Error Researching Keywords",
         description: error.message,
         variant: "destructive",
       });
-    },
+    }
   });
 
-  const saveKeywords = useMutation({
-    mutationFn: async (data: z.infer<typeof saveListSchema> & { keywords: KeywordResearchResult[] }) => {
+  const saveKeywords = useMutation<SaveKeywordsResponse, ApiError, z.infer<typeof saveListSchema> & { keywords: KeywordResearchResult[] }>({
+    mutationFn: async (data) => {
       const response = await fetch("/api/keywords/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(data)
       });
-
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to save keywords");
+        const error = await response.json();
+        throw new Error(error.message || "Failed to save keywords");
       }
-
       return response.json();
     },
     onSuccess: () => {
       setIsSaveDialogOpen(false);
-      setSelectedKeywords(new Set());
-      saveForm.reset();
-      queryClient.invalidateQueries({ queryKey: ['/api/keywords/lists'] });
       toast({
-        title: "Success",
-        description: "Keywords saved successfully",
+        title: "Keywords Saved",
+        description: "Your keywords have been saved successfully.",
       });
+      saveForm.reset();
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       toast({
-        title: "Error",
+        title: "Error Saving Keywords",
         description: error.message,
         variant: "destructive",
       });
-    },
+    }
   });
 
   const handleSaveSubmit = async (data: z.infer<typeof saveListSchema>) => {
@@ -227,18 +214,18 @@ export default function KeywordResearch() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-5xl mx-auto space-y-8">
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             Keyword Research
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Find high-performing keywords for your content strategy
+            Discover high-performing keywords and optimize your content strategy
           </p>
         </div>
 
         {researchKeywords.error && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="animate-in fade-in-50">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>
@@ -249,7 +236,10 @@ export default function KeywordResearch() {
 
         <Card className="border-2">
           <CardHeader>
-            <CardTitle>Research Keywords</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Research Keywords
+            </CardTitle>
             <CardDescription>
               Enter your topic and target market to discover relevant keywords
             </CardDescription>
@@ -260,7 +250,7 @@ export default function KeywordResearch() {
                 onSubmit={form.handleSubmit((data) => researchKeywords.mutate(data))}
                 className="space-y-6"
               >
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="search_question"
@@ -284,21 +274,24 @@ export default function KeywordResearch() {
 
                   <FormField
                     control={form.control}
-                    name="search_country"
+                    name="market"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Target Market</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select market" />
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a market" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="en-US">United States</SelectItem>
-                            <SelectItem value="en-GB">United Kingdom</SelectItem>
-                            <SelectItem value="en-CA">Canada</SelectItem>
-                            <SelectItem value="en-AU">Australia</SelectItem>
+                            <SelectItem value="us">United States</SelectItem>
+                            <SelectItem value="uk">United Kingdom</SelectItem>
+                            <SelectItem value="ca">Canada</SelectItem>
+                            <SelectItem value="au">Australia</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -307,56 +300,71 @@ export default function KeywordResearch() {
                   />
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={researchKeywords.isLoading}
-                >
-                  {researchKeywords.isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Researching...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="mr-2 h-4 w-4" />
-                      Research Keywords
-                    </>
-                  )}
-                </Button>
+                <div className="flex justify-end">
+                  <Button
+                    type="submit"
+                    disabled={researchKeywords.status === "loading"}
+                    className="min-w-[120px]"
+                  >
+                    {researchKeywords.status === "loading" ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Researching...
+                      </>
+                    ) : (
+                      <>
+                        <TrendingUp className="mr-2 h-4 w-4" />
+                        Research
+                      </>
+                    )}
+                  </Button>
+                </div>
               </form>
             </Form>
           </CardContent>
         </Card>
 
-        <KeywordResultsSection
-          results={results}
-          selectedKeywords={selectedKeywords}
-          onToggleKeyword={toggleKeywordSelection}
-          onOpenSaveDialog={() => setIsSaveDialogOpen(true)}
-        />
+        {/* Loading State */}
+        {researchKeywords.status === "loading" && (
+          <div className="flex flex-col items-center justify-center py-12 animate-in fade-in-50">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground">Researching keywords...</p>
+          </div>
+        )}
 
+        {/* Results Section */}
+        {results && results.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <KeywordResultsSection
+              results={results}
+              selectedKeywords={selectedKeywords}
+              onToggleKeyword={toggleKeywordSelection}
+              onOpenSaveDialog={() => setIsSaveDialogOpen(true)}
+            />
+          </motion.div>
+        )}
+
+        {/* Save Dialog */}
         <Dialog 
           open={isSaveDialogOpen} 
           onOpenChange={(open) => {
             setIsSaveDialogOpen(open);
             if (!open) {
-              // Reset form when dialog closes
               saveForm.reset();
-              // Remove focus from any elements inside the dialog
               document.activeElement instanceof HTMLElement && document.activeElement.blur();
             }
           }}
         >
-          <DialogTrigger asChild>
-            <Button onClick={() => setIsSaveDialogOpen(true)}>
-              <Save className="mr-2 h-4 w-4" />
-              Save Selected ({selectedKeywords.size})
-            </Button>
-          </DialogTrigger>
-          <DialogContent onEscapeKeyDown={() => setIsSaveDialogOpen(false)} onInteractOutside={() => setIsSaveDialogOpen(false)}>
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Save Keywords</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <Save className="h-5 w-5" />
+                Save Keywords
+              </DialogTitle>
               <DialogDescription>
                 Save selected keywords to a new or existing list
               </DialogDescription>
@@ -372,7 +380,6 @@ export default function KeywordResearch() {
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
-                          // Clear new list name when selecting existing list
                           if (value) {
                             saveForm.setValue("newListName", "");
                           }
@@ -396,22 +403,31 @@ export default function KeywordResearch() {
                     </FormItem>
                   )}
                 />
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or
+                    </span>
+                  </div>
+                </div>
+
                 <FormField
                   control={saveForm.control}
                   name="newListName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Or Create New List</FormLabel>
+                      <FormLabel>Create New List</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter new list name"
+                          placeholder="Enter list name"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
-                            // Clear list selection when typing new list name
-                            if (e.target.value) {
-                              saveForm.setValue("listId", undefined);
-                            }
+                            saveForm.setValue("listId", "");
                           }}
                         />
                       </FormControl>
@@ -419,13 +435,14 @@ export default function KeywordResearch() {
                     </FormItem>
                   )}
                 />
-                <DialogFooter>
+
+                <DialogFooter className="gap-2 sm:gap-0">
                   <Button
                     type="submit"
-                    disabled={saveKeywords.isLoading}
-                    className="w-full"
+                    disabled={saveKeywords.status === "loading"}
+                    className="w-full sm:w-auto"
                   >
-                    {saveKeywords.isLoading ? (
+                    {saveKeywords.status === "loading" ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Saving...
@@ -433,7 +450,7 @@ export default function KeywordResearch() {
                     ) : (
                       <>
                         <Save className="mr-2 h-4 w-4" />
-                        Save Keywords
+                        Save {selectedKeywords.size} Keywords
                       </>
                     )}
                   </Button>

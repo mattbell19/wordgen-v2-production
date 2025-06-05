@@ -117,20 +117,61 @@ The goal is to help you maintain a big picture as well as the progress of the ta
   5. Never display raw HTML content as plain text in user interface components
   6. Distinguish between preview contexts (need clean text) and full content contexts (need HTML rendering)
 
+- When troubleshooting PostgreSQL `ECONNREFUSED` errors on macOS with Homebrew:
+  1. Check service status: `brew services list | grep postgresql`
+  2. If service is stopped or in error state, try starting: `brew services start postgresql@<version>` (e.g., `postgresql@14`)
+  3. If starting fails with "Bootstrap failed", try stopping first: `brew services stop postgresql@<version>`
+  4. Then, attempt to start again: `brew services start postgresql@<version>`
+
 # Scratchpad
 
-## Current Task: Fix Article HTML Display Issues
+## Current Task: Fix Critical User Authentication and Dashboard Issues
 
-### Problem:
-- When viewing articles in the "My Articles" section and other places, raw HTML content was being displayed instead of properly rendered content
-- Users saw HTML tags instead of formatted text in article previews
-- This issue affected user experience as content appeared broken
+### Previous Problem Fixed:
+- Users had to keep re-registering after every deployment
+- Database was being completely wiped on each Heroku deployment
+- User accounts, articles, and all data was lost with each update
+
+### New Problem Fixed:
+- Dashboard statistics showed all zeros for new users
+- Free Credits showed 0/3 instead of actual usage
+- No usage data was being populated correctly
+
+### Latest Problem Fixed:
+- AI SEO Agent was causing 500 and 429 errors
+- External AI SEO service was unavailable causing crashes
+- Users saw multiple error messages in browser console
 
 ### Issues Fixed:
+[X] CRITICAL FIX: Fixed Procfile to preserve user data across deployments
+[X] Changed release command from `db:fresh` to `db:migrate` 
+[X] Users will no longer lose their accounts when app is deployed
+[X] Authentication system now works consistently across deployments
+[X] All user data, articles, and settings are now preserved
+[X] Deployed fix as v110 to production - DATABASE PERSISTENCE RESTORED
+[X] DASHBOARD FIX: Added automatic userUsage record creation during registration
+[X] Added auto-sync functionality to populate dashboard statistics
+[X] Fixed issue where new users saw all zeros in dashboard stats
+[X] Deployed dashboard statistics fix as v111 to production - REAL DATA NOW DISPLAYS
+[X] AI SEO FIX: Fixed 500/429 errors caused by missing external AI SEO service
+[X] Added graceful error handling for unavailable external services
+[X] AI SEO Agent now shows proper "service unavailable" messages instead of crashing
+[X] Deployed AI SEO service fix as v112 to production - ERROR HANDLING IMPROVED
+
+### Previous HTML Display Issues (COMPLETED):
 [X] Fixed ArticleCard component to show clean text preview instead of raw HTML
 [X] Fixed BulkArticleWriter page to show clean text preview instead of raw HTML
 [X] Created reusable getCleanTextPreview function to strip HTML tags from content
 [X] Ensured proper HTML rendering in full article views using dangerouslySetInnerHTML where appropriate
+[X] Successfully deployed fixes to Heroku production environment
+[X] Verified that complex HTML articles (with styling, TOC, headings) render properly in full views
+[X] Confirmed that preview contexts show clean text instead of raw HTML tags
+[X] MAJOR FIX: Added View/Edit toggle to ArticleDialog - now properly renders complex HTML in view mode
+[X] Fixed the core issue where opening articles showed raw HTML instead of beautiful rendered content
+[X] Deployed ArticleDialog fix as v108 to production - ready for testing
+[X] FINAL FIX: Replaced complex RichTextEditor with simple HTML textarea for edit mode
+[X] Edit mode now works perfectly - users can edit raw HTML content directly
+[X] Deployed complete solution as v109 to production - HTML ISSUES FULLY RESOLVED
 
 ### Changes Made:
 1. Added getCleanTextPreview helper function to ArticleCard component
@@ -144,6 +185,12 @@ The goal is to help you maintain a big picture as well as the progress of the ta
 - Cleans up extra whitespace and line breaks: `/\s+/g`
 - Properly truncates content to desired length
 - Maintains proper rendering in full article views using dangerouslySetInnerHTML
+
+### Plan:
+[X] Investigate `ECONNREFUSED` errors in logs.
+[X] Check PostgreSQL service status.
+[X] Provide instructions to start PostgreSQL if stopped.
+[X] Confirm API endpoints are working after DB fix.
 
 ## Current Task: Fix SEO Audit System Issues
 
@@ -196,6 +243,18 @@ The goal is to help you maintain a big picture as well as the progress of the ta
     - Configuration options
     - Error handling patterns
     - Caching strategies
+
+## Current Task: Diagnose and Fix API 500 Errors (ECONNREFUSED)
+
+### Problem:
+- API endpoints `/api/ai-seo/generate-article` and `/api/scraping/reports` are returning 500 errors.
+- Logs show `ECONNREFUSED ::1:5432` and `ECONNREFUSED 127.0.0.1:5432`, indicating PostgreSQL connection failure.
+
+### Plan:
+[X] Investigate `ECONNREFUSED` errors in logs.
+[X] Check PostgreSQL service status.
+[X] Provide instructions to start PostgreSQL if stopped.
+[X] Confirm API endpoints are working after DB fix.
 
 ## Current Task: Implement SEO Audit System
 
