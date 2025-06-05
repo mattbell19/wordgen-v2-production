@@ -129,7 +129,20 @@ The goal is to help you maintain a big picture as well as the progress of the ta
 
 # Scratchpad
 
-## Current Task: Check Google Search Console Integration
+## Awaiting Next Task
+
+Previous task completed: Investigated and fixed Google Search Console integration.
+
+### Recent Accomplishments:
+- Fixed hardcoded localhost URL in ConnectGSC component
+- Documented OAuth flow best practices
+- Verified integration is complete and functional
+
+Ready for the next task.
+
+## Previous Tasks Archive
+
+### Task: Check Google Search Console Integration (COMPLETED)
 
 ### Investigation Summary:
 [X] Examined the search console implementation
@@ -172,32 +185,6 @@ The integration appears to be fully implemented and should work properly once th
 - GOOGLE_CLIENT_ID
 - GOOGLE_CLIENT_SECRET  
 - GOOGLE_REDIRECT_URI (must match Google Cloud Console configuration)
-
-## Previous Task: Fix Article HTML Display Issues
-
-### Problem:
-- When viewing articles in the "My Articles" section and other places, raw HTML content was being displayed instead of properly rendered content
-- Users saw HTML tags instead of formatted text in article previews
-- This issue affected user experience as content appeared broken
-
-### Issues Fixed:
-[X] Fixed ArticleCard component to show clean text preview instead of raw HTML
-[X] Fixed BulkArticleWriter page to show clean text preview instead of raw HTML
-[X] Created reusable getCleanTextPreview function to strip HTML tags from content
-[X] Ensured proper HTML rendering in full article views using dangerouslySetInnerHTML where appropriate
-
-### Changes Made:
-1. Added getCleanTextPreview helper function to ArticleCard component
-2. Updated article content display in ArticleCard to use clean text preview
-3. Added same getCleanTextPreview helper function to BulkArticleWriter page
-4. Updated article preview display in BulkArticleWriter to use clean text preview
-5. Verified that full article views (ArticleDialog, ArticlePreview) already use proper HTML rendering
-
-### Technical Solution:
-- Created helper function that strips HTML tags using regex: `/<[^>]*>/g`
-- Cleans up extra whitespace and line breaks: `/\s+/g`
-- Properly truncates content to desired length
-- Maintains proper rendering in full article views using dangerouslySetInnerHTML
 
 ## Current Task: Fix SEO Audit System Issues
 
