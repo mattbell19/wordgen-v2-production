@@ -516,6 +516,214 @@ export const selectArticleUsageSchema = createSelectSchema(articleUsage);
 export type InsertArticleUsage = typeof articleUsage.$inferInsert;
 export type SelectArticleUsage = typeof articleUsage.$inferSelect;
 
+// LLM SEO Addon Tables
+export const brandMonitoring = pgTable("brand_monitoring", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  teamId: integer("team_id").references(() => teams.id, { onDelete: "cascade" }),
+  brandName: text("brand_name").notNull(),
+  description: text("description"),
+  trackingQueries: jsonb("tracking_queries").$type<string[]>().default([]).notNull(),
+  competitors: jsonb("competitors").$type<string[]>().default([]).notNull(),
+  monitoringFrequency: text("monitoring_frequency").default("daily").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  settings: jsonb("settings").default({}).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    userIdIdx: index('brand_monitoring_user_id_idx').on(table.userId),
+    teamIdIdx: index('brand_monitoring_team_id_idx').on(table.teamId),
+    brandNameIdx: index('brand_monitoring_brand_name_idx').on(table.brandName),
+    isActiveIdx: index('brand_monitoring_is_active_idx').on(table.isActive),
+  };
+});
+
+export const llmMentions = pgTable("llm_mentions", {
+  id: serial("id").primaryKey(),
+  brandId: integer("brand_id").references(() => brandMonitoring.id, { onDelete: "cascade" }).notNull(),
+  llmPlatform: text("llm_platform").notNull(),
+  query: text("query").notNull(),
+  response: text("response").notNull(),
+  mentionType: text("mention_type").notNull(),
+  brandMentioned: text("brand_mentioned"),
+  rankingPosition: integer("ranking_position"),
+  sentiment: text("sentiment"),
+  confidenceScore: integer("confidence_score"),
+  contextSnippet: text("context_snippet"),
+  responseMetadata: jsonb("response_metadata").default({}).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    brandIdIdx: index('llm_mentions_brand_id_idx').on(table.brandId),
+    platformIdx: index('llm_mentions_platform_idx').on(table.llmPlatform),
+    createdAtIdx: index('llm_mentions_created_at_idx').on(table.createdAt),
+    mentionTypeIdx: index('llm_mentions_mention_type_idx').on(table.mentionType),
+    sentimentIdx: index('llm_mentions_sentiment_idx').on(table.sentiment),
+  };
+});
+
+export const optimizationRecommendations = pgTable("optimization_recommendations", {
+  id: serial("id").primaryKey(),
+  brandId: integer("brand_id").references(() => brandMonitoring.id, { onDelete: "cascade" }).notNull(),
+  recommendationType: text("recommendation_type").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  priority: text("priority").default("medium").notNull(),
+  status: text("status").default("pending").notNull(),
+  impactEstimate: text("impact_estimate"),
+  effortEstimate: text("effort_estimate"),
+  data: jsonb("data").default({}).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    brandIdIdx: index('optimization_recommendations_brand_id_idx').on(table.brandId),
+    statusIdx: index('optimization_recommendations_status_idx').on(table.status),
+    priorityIdx: index('optimization_recommendations_priority_idx').on(table.priority),
+    typeIdx: index('optimization_recommendations_type_idx').on(table.recommendationType),
+  };
+});
+
+export const monitoringJobs = pgTable("monitoring_jobs", {
+  id: serial("id").primaryKey(),
+  brandId: integer("brand_id").references(() => brandMonitoring.id, { onDelete: "cascade" }).notNull(),
+  jobType: text("job_type").notNull(),
+  status: text("status").default("pending").notNull(),
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  errorMessage: text("error_message"),
+  results: jsonb("results").default({}).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    brandIdIdx: index('monitoring_jobs_brand_id_idx').on(table.brandId),
+    statusIdx: index('monitoring_jobs_status_idx').on(table.status),
+    jobTypeIdx: index('monitoring_jobs_job_type_idx').on(table.jobType),
+    scheduledAtIdx: index('monitoring_jobs_scheduled_at_idx').on(table.scheduledAt),
+  };
+});
+
+export const competitorMentions = pgTable("competitor_mentions", {
+  id: serial("id").primaryKey(),
+  brandId: integer("brand_id").references(() => brandMonitoring.id, { onDelete: "cascade" }).notNull(),
+  competitorName: text("competitor_name").notNull(),
+  llmPlatform: text("llm_platform").notNull(),
+  query: text("query").notNull(),
+  response: text("response").notNull(),
+  rankingPosition: integer("ranking_position"),
+  sentiment: text("sentiment"),
+  confidenceScore: integer("confidence_score"),
+  contextSnippet: text("context_snippet"),
+  responseMetadata: jsonb("response_metadata").default({}).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    brandIdIdx: index('competitor_mentions_brand_id_idx').on(table.brandId),
+    competitorIdx: index('competitor_mentions_competitor_idx').on(table.competitorName),
+    platformIdx: index('competitor_mentions_platform_idx').on(table.llmPlatform),
+    createdAtIdx: index('competitor_mentions_created_at_idx').on(table.createdAt),
+  };
+});
+
+export const llmAnalyticsDaily = pgTable("llm_analytics_daily", {
+  id: serial("id").primaryKey(),
+  brandId: integer("brand_id").references(() => brandMonitoring.id, { onDelete: "cascade" }).notNull(),
+  date: timestamp("date").notNull(),
+  totalMentions: integer("total_mentions").default(0).notNull(),
+  positiveMentions: integer("positive_mentions").default(0).notNull(),
+  neutralMentions: integer("neutral_mentions").default(0).notNull(),
+  negativeMentions: integer("negative_mentions").default(0).notNull(),
+  avgRankingPosition: integer("avg_ranking_position"),
+  competitorMentions: integer("competitor_mentions").default(0).notNull(),
+  llmPlatformBreakdown: jsonb("llm_platform_breakdown").default({}).notNull(),
+  queryPerformance: jsonb("query_performance").default({}).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    brandDateIdx: uniqueIndex('llm_analytics_daily_brand_date_idx').on(table.brandId, table.date),
+    dateIdx: index('llm_analytics_daily_date_idx').on(table.date),
+  };
+});
+
+// LLM SEO Schema types and validation
+export const insertBrandMonitoringSchema = createInsertSchema(brandMonitoring, {
+  brandName: z.string().min(1, "Brand name is required"),
+  description: z.string().optional(),
+  trackingQueries: z.array(z.string()).default([]),
+  competitors: z.array(z.string()).default([]),
+  monitoringFrequency: z.enum(["daily", "weekly", "monthly"]).default("daily"),
+  isActive: z.boolean().default(true),
+  settings: z.record(z.any()).default({}),
+});
+
+export const selectBrandMonitoringSchema = createSelectSchema(brandMonitoring);
+export type InsertBrandMonitoring = typeof brandMonitoring.$inferInsert;
+export type SelectBrandMonitoring = typeof brandMonitoring.$inferSelect;
+
+export const insertLlmMentionSchema = createInsertSchema(llmMentions, {
+  llmPlatform: z.enum(["openai", "anthropic", "google", "other"]),
+  mentionType: z.enum(["direct", "indirect", "competitor"]),
+  sentiment: z.enum(["positive", "neutral", "negative"]).optional(),
+  confidenceScore: z.number().min(0).max(100).optional(),
+  responseMetadata: z.record(z.any()).default({}),
+});
+
+export const selectLlmMentionSchema = createSelectSchema(llmMentions);
+export type InsertLlmMention = typeof llmMentions.$inferInsert;
+export type SelectLlmMention = typeof llmMentions.$inferSelect;
+
+export const insertOptimizationRecommendationSchema = createInsertSchema(optimizationRecommendations, {
+  recommendationType: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().min(1),
+  priority: z.enum(["high", "medium", "low"]).default("medium"),
+  status: z.enum(["pending", "in_progress", "completed", "dismissed"]).default("pending"),
+  impactEstimate: z.enum(["high", "medium", "low"]).optional(),
+  effortEstimate: z.enum(["high", "medium", "low"]).optional(),
+  data: z.record(z.any()).default({}),
+});
+
+export const selectOptimizationRecommendationSchema = createSelectSchema(optimizationRecommendations);
+export type InsertOptimizationRecommendation = typeof optimizationRecommendations.$inferInsert;
+export type SelectOptimizationRecommendation = typeof optimizationRecommendations.$inferSelect;
+
+export const insertMonitoringJobSchema = createInsertSchema(monitoringJobs, {
+  jobType: z.enum(["mention_scan", "competitor_analysis", "optimization_check"]),
+  status: z.enum(["pending", "running", "completed", "failed"]).default("pending"),
+  results: z.record(z.any()).default({}),
+});
+
+export const selectMonitoringJobSchema = createSelectSchema(monitoringJobs);
+export type InsertMonitoringJob = typeof monitoringJobs.$inferInsert;
+export type SelectMonitoringJob = typeof monitoringJobs.$inferSelect;
+
+export const insertCompetitorMentionSchema = createInsertSchema(competitorMentions, {
+  llmPlatform: z.enum(["openai", "anthropic", "google", "other"]),
+  sentiment: z.enum(["positive", "neutral", "negative"]).optional(),
+  confidenceScore: z.number().min(0).max(100).optional(),
+  responseMetadata: z.record(z.any()).default({}),
+});
+
+export const selectCompetitorMentionSchema = createSelectSchema(competitorMentions);
+export type InsertCompetitorMention = typeof competitorMentions.$inferInsert;
+export type SelectCompetitorMention = typeof competitorMentions.$inferSelect;
+
+export const insertLlmAnalyticsDailySchema = createInsertSchema(llmAnalyticsDaily, {
+  totalMentions: z.number().min(0).default(0),
+  positiveMentions: z.number().min(0).default(0),
+  neutralMentions: z.number().min(0).default(0),
+  negativeMentions: z.number().min(0).default(0),
+  competitorMentions: z.number().min(0).default(0),
+  llmPlatformBreakdown: z.record(z.any()).default({}),
+  queryPerformance: z.record(z.any()).default({}),
+});
+
+export const selectLlmAnalyticsDailySchema = createSelectSchema(llmAnalyticsDaily);
+export type InsertLlmAnalyticsDaily = typeof llmAnalyticsDaily.$inferInsert;
+export type SelectLlmAnalyticsDaily = typeof llmAnalyticsDaily.$inferSelect;
+
 /**
  * Google Search Console connections table
  * Stores OAuth tokens and connection information

@@ -18,7 +18,8 @@ import {
   // BookmarkIcon, // No longer used after Saved Words removal
   LineChart,
   Brain,
-  Sparkles
+  Sparkles,
+  Target
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -124,6 +125,12 @@ export function SidebarNav({ className }: SidebarNavProps) {
       label: "AI SEO Agent",
       icon: Sparkles,
       tourId: "ai-seo-agent",
+    },
+    {
+      href: "/dashboard/llm-brand-ranking",
+      label: "LLM Brand Ranking",
+      icon: Target,
+      tourId: "llm-brand-ranking",
     },
     {
       href: "/dashboard/sitemap-analyzer",

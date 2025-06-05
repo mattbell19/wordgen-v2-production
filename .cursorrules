@@ -125,6 +125,282 @@ The goal is to help you maintain a big picture as well as the progress of the ta
 
 # Scratchpad
 
+## Current Task: Enhanced Keyword Research UI (COMPLETED) ✅
+
+### Issues Fixed:
+[X] CRITICAL FIX: Fixed Procfile to preserve user data across deployments
+[X] Changed release command from `db:fresh` to `db:migrate` 
+[X] Users will no longer lose their accounts when app is deployed
+[X] Authentication system now works consistently across deployments
+[X] All user data, articles, and settings are now preserved
+[X] Deployed fix as v110 to production - DATABASE PERSISTENCE RESTORED
+[X] DASHBOARD FIX: Added automatic userUsage record creation during registration
+[X] Added auto-sync functionality to populate dashboard statistics
+[X] Fixed issue where new users saw all zeros in dashboard stats
+[X] Deployed dashboard statistics fix as v111 to production - REAL DATA NOW DISPLAYS
+[X] AI SEO FIX: Fixed 500/429 errors caused by missing external AI SEO service
+[X] Added graceful error handling for unavailable external services
+[X] AI SEO Agent now shows proper "service unavailable" messages instead of crashing
+[X] Deployed AI SEO service fix as v112 to production - ERROR HANDLING IMPROVED
+[X] KEYWORD UI ENHANCEMENT: Completely redesigned keyword research interface
+[X] Enhanced keyword result cards with visual indicators and color coding
+[X] Added comprehensive filtering and sorting capabilities
+[X] Improved search functionality within results
+[X] Enhanced save dialog with better UX and cleaner design
+[X] Added loading states, animations, and responsive layout
+[X] Made UI consistent with modern application design system
+[X] Deployed keyword UI improvements as v113 to production - MODERN UI DEPLOYED
+
+### Changes Made:
+1. **KeywordResultCard Component**:
+   - Added visual selection feedback with border highlighting
+   - Implemented color-coded difficulty badges (green/yellow/red)
+   - Enhanced competition metrics with color indicators
+   - Added related keywords display with badge styling
+   - Improved spacing and typography hierarchy
+
+2. **KeywordResultsSection Component**:
+   - Added comprehensive filtering system with volume and difficulty ranges
+   - Implemented keyword search functionality
+   - Added sorting capabilities (volume, difficulty, competition)
+   - Enhanced filter UI with collapsible panel design
+   - Added empty state handling for filtered results
+
+3. **KeywordResearch Page**:
+   - Updated form layout with improved responsive design
+   - Enhanced loading states with proper animations
+   - Improved save dialog with better visual hierarchy
+   - Added gradient heading and modern styling
+   - Fixed mutation types and error handling
+
+### Technical Improvements:
+- Fixed TypeScript type definitions for react-query mutations
+- Enhanced error handling with proper API response types
+- Improved component performance with better state management
+- Added proper loading state management
+- Enhanced accessibility with better form labeling
+
+### Production Status:
+✅ **DEPLOYED TO PRODUCTION** - All keyword UI improvements are now live
+- Enhanced user experience for keyword research
+- Modern, consistent design throughout the application
+- Improved functionality and usability
+- Better error handling and loading states
+
+## Next Steps:
+[X] Monitor production deployment for any issues
+[X] Gather user feedback on the new keyword UI
+[X] Consider adding more advanced keyword analysis features
+[X] ✅ **COMPLETED**: Plan next feature enhancements based on user needs
+
+## NEW FEATURE PLANNED: LLM Brand Ranking & Tracking ✅
+
+### Planning Status: COMPREHENSIVE PLAN COMPLETED
+[X] **Feature Analysis**: Defined core use cases and business value
+[X] **Technical Architecture**: Designed multi-LLM client system and database schema
+[X] **Implementation Roadmap**: Created 4-phase rollout plan (16-18 weeks total)
+[X] **Documentation**: Created detailed technical specification
+[X] **Prototype**: Built example queries and response analysis system
+[X] **Integration Strategy**: Planned seamless integration with existing codebase
+
+### Key Planning Deliverables Created:
+1. **LLM_BRAND_RANKING_SPEC.md** - Complete technical specification
+2. **BRAND_RANKING_PROTOTYPE.md** - Working prototype with sample queries
+3. **Comprehensive database schema** - 5 new tables designed
+4. **API endpoint specifications** - Full REST API planned
+5. **UI/UX wireframes** - Dashboard and analytics interfaces planned
+6. **Implementation phases** - 4 phases with clear timelines and deliverables
+
+### Ready for Implementation:
+- All technical requirements defined
+- Database schema ready for migration
+- API structure planned
+- Frontend components mapped
+- Integration points identified
+- Success metrics established
+
+**RECOMMENDATION**: This feature is ready to move into development Phase 1 (MVP) 🚀
+
+## Current Task: LLM Brand Ranking & Tracking Feature - DEPLOYMENT IN PROGRESS 🚀
+
+### Status: IMPLEMENTATION COMPLETED - DEPLOYING TO PRODUCTION
+[X] **Complete Implementation**: All backend services, database schema, API routes, and frontend components have been implemented
+[X] **Database Migration**: Created migration file 0010_add_llm_seo_tables.sql with all required tables
+[X] **API Routes**: Implemented /api/llm-seo/* endpoints for full functionality
+[X] **Frontend Components**: Created LLMBrandDashboard and all related UI components
+[X] **Navigation**: Added route and sidebar navigation for LLM Brand Ranking page
+[ ] **Database Migration Execution**: Need to run migration on production database
+[ ] **Environment Variables**: Need to ensure OpenAI/Anthropic API keys are configured
+[ ] **Production Testing**: Test the complete workflow after deployment
+
+### Overview:
+Implement a new feature that tracks and ranks how well brands perform in LLM responses across different AI models (Claude, ChatGPT, Gemini). This will help users understand their brand visibility and positioning in AI-generated content.
+
+### Core Use Cases:
+1. **Brand Mention Tracking**: Track where and how often a brand is mentioned when LLMs are asked about specific topics
+2. **Competitive Analysis**: Compare brand positioning against competitors in LLM responses
+3. **Topic Association**: Understand what topics LLMs associate with specific brands
+4. **Ranking Trends**: Monitor how brand rankings change over time
+5. **Multi-Model Comparison**: See how different LLMs (Claude, ChatGPT, Gemini) rank the same brands
+
+### Technical Architecture Plan:
+
+#### Phase 1: Core Infrastructure
+[ ] Create multi-LLM client abstraction layer
+  [ ] Extend existing OpenAI service to support brand queries
+  [ ] Create Claude brand ranking service using existing claude.service.ts
+  [ ] Add Gemini client integration for brand analysis
+  [ ] Implement unified response format across all LLM providers
+
+[ ] Design and implement database schema
+  [ ] Create `brand_profiles` table for user's tracked brands
+  [ ] Create `llm_brand_queries` table for query logs and responses
+  [ ] Create `brand_rankings` table for historical ranking data
+  [ ] Create `brand_competitors` table for competitive analysis
+  [ ] Create `brand_tracking_sessions` table for monitoring campaigns
+
+[ ] Implement query generation system
+  [ ] Create template system for brand research queries
+  [ ] Add query variation algorithms for comprehensive testing
+  [ ] Implement industry-specific query sets
+  [ ] Add competitor comparison query templates
+
+[ ] Extend existing task queue system
+  [ ] Add brand ranking task types to queue-manager.service.ts
+  [ ] Implement LLM rate limiting and retry logic
+  [ ] Add progress tracking for multi-query sessions
+  [ ] Create cleanup jobs for old ranking data
+
+#### Phase 2: Data Collection & Analysis
+[ ] Implement brand mention detection engine
+  [ ] Create NLP-based brand extraction from LLM responses
+  [ ] Add position tracking (first mention, context placement)
+  [ ] Implement mention frequency analysis
+  [ ] Add brand association mapping (what topics trigger mentions)
+
+[ ] Create comprehensive ranking algorithm
+  [ ] Position-based scoring (earlier = higher score)
+  [ ] Context relevance scoring (direct vs indirect mentions)
+  [ ] Frequency weighting across multiple queries
+  [ ] Competitive positioning analysis
+
+[ ] Add sentiment and quality analysis
+  [ ] Sentiment scoring for each brand mention
+  [ ] Context quality assessment (positive, neutral, negative)
+  [ ] Recommendation likelihood scoring
+  [ ] Brand authority perception metrics
+
+[ ] Implement competitor comparison system
+  [ ] Automated competitor identification
+  [ ] Side-by-side ranking comparisons
+  [ ] Market share perception analysis
+  [ ] Competitive gap identification
+
+#### Phase 3: User Interface & Experience
+[ ] Create brand tracking dashboard page
+  [ ] Overview cards showing brand performance across LLMs
+  [ ] Quick stats: average ranking, mention frequency, sentiment
+  [ ] Recent activity feed with notable ranking changes
+  [ ] Action buttons for new brand tracking and reports
+
+[ ] Build brand comparison interface
+  [ ] Interactive charts comparing multiple brands
+  [ ] LLM-specific performance breakdowns
+  [ ] Time-based trend visualization
+  [ ] Export functionality for reports and presentations
+
+[ ] Implement historical trend analysis
+  [ ] Line charts showing ranking changes over time
+  [ ] Heatmaps for LLM performance patterns
+  [ ] Seasonal trend identification
+  [ ] Performance correlation analysis
+
+[ ] Create comprehensive reporting system
+  [ ] PDF export with executive summaries
+  [ ] Detailed CSV data exports
+  [ ] Automated weekly/monthly reports
+  [ ] Custom report builder with filtering
+
+#### Phase 4: Advanced Features & Optimization
+[ ] Add intelligent monitoring and alerts
+  [ ] Ranking threshold alerts (drop below position X)
+  [ ] New competitor detection notifications
+  [ ] Sentiment change alerts
+  [ ] Weekly performance summary emails
+
+[ ] Implement custom query templates
+  [ ] User-defined query templates
+  [ ] Industry-specific question sets
+  [ ] A/B testing for query effectiveness
+  [ ] Template sharing and marketplace
+
+[ ] Add industry categorization
+  [ ] Pre-built industry query sets (tech, healthcare, finance)
+  [ ] Industry-specific ranking benchmarks
+  [ ] Sector-based competitor suggestions
+  [ ] Industry trend analysis
+
+[ ] Create external API integration
+  [ ] RESTful API for third-party integrations
+  [ ] Webhook system for real-time updates
+  [ ] Integration with marketing tools
+  [ ] White-label reporting capabilities
+
+### Database Schema Design:
+
+#### New Tables Required:
+```sql
+-- Brand profiles that users want to track
+brand_profiles (
+  id, user_id, brand_name, description, 
+  industry_category, competitors, 
+  tracking_keywords, created_at, updated_at
+)
+
+-- Individual LLM queries and their responses
+llm_brand_queries (
+  id, session_id, user_id, brand_id, 
+  llm_provider, query_text, response_text,
+  query_type, created_at
+)
+
+-- Processed ranking data from queries
+brand_rankings (
+  id, query_id, brand_id, competitor_brand_id,
+  mention_position, mention_count, sentiment_score,
+  context_quality, ranking_score, created_at
+)
+
+-- Competitive analysis data
+brand_competitors (
+  id, brand_id, competitor_name, 
+  relationship_type, auto_detected,
+  created_at, updated_at
+)
+
+-- Tracking sessions for batch analysis
+brand_tracking_sessions (
+  id, user_id, session_name, brands_tracked,
+  query_template_id, status, results_summary,
+  created_at, completed_at
+)
+```
+
+### Integration Strategy:
+- **Authentication**: Use existing user system and session management
+- **UI Framework**: Extend current dashboard with new brand tracking section
+- **API Structure**: Add new routes under `/api/brand-ranking/`
+- **Database**: Extend current Drizzle schema with brand tracking tables
+- **Services**: Build on existing OpenAI/Claude services architecture
+- **Queue System**: Extend current queue-manager for LLM batch processing
+- **Frontend**: Use existing React components and styling system
+
+### Feature Rollout Plan:
+1. **MVP Release**: Basic brand tracking with single LLM (OpenAI)
+2. **Multi-LLM Release**: Add Claude and Gemini support
+3. **Analytics Release**: Advanced charts and historical analysis
+4. **Enterprise Release**: Custom templates and API access
+
 ## Current Task: Fix Critical User Authentication and Dashboard Issues
 
 ### Previous Problem Fixed:
@@ -395,3 +671,55 @@ The goal is to help you maintain a big picture as well as the progress of the ta
 [ ] Monitor production logs for any issues
 [ ] Plan future features and improvements
 [ ] Consider adding automated tests before deployment
+
+## Current Task: Implement Claude Code CLI Tool
+
+### Overview
+Implementing a CLI tool similar to Claude Code that provides:
+- File editing and bug fixing capabilities
+- Codebase understanding and querying
+- Test execution and fixing
+- Git operations handling
+- Web search integration
+
+### Implementation Plan
+[ ] Create core CLI tool structure
+  [ ] Set up command-line argument parsing
+  [ ] Implement authentication handling
+  [ ] Create base command handler
+
+[ ] Implement core features
+  [ ] File operations (read/write/edit)
+  [ ] Codebase search and understanding
+  [ ] Test execution and fixing
+  [ ] Git operations
+  [ ] Web search integration
+
+[ ] Add security features
+  [ ] Direct API connection setup
+  [ ] Authentication token management
+  [ ] Secure file operations
+
+[ ] Create documentation
+  [ ] Installation guide
+  [ ] Usage instructions
+  [ ] Configuration options
+  [ ] Security considerations
+
+### Technical Requirements
+1. Node.js CLI application
+2. TypeScript for type safety
+3. Integration with existing tools:
+   - LLM API for code understanding
+   - Web scraper for documentation
+   - Search engine for resources
+4. Security-first approach with proper authentication
+
+### Files to Create
+1. `tools/claude-code/`
+   - `index.ts` - Main CLI entry point
+   - `commands/` - Command implementations
+   - `utils/` - Helper functions
+   - `types/` - TypeScript type definitions
+   - `config/` - Configuration handling
+   - `auth/` - Authentication management

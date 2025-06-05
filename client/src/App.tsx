@@ -45,6 +45,7 @@ import SettingsPage from "@/pages/admin/settings";
 import CombinedSavedKeywords from "@/pages/combined-saved-keywords";
 import SearchConsole from "@/pages/dashboard/search-console";
 import { AISEOPage } from "@/pages/AISEOPage";
+import { LLMBrandRankingPage } from "@/pages/LLMBrandRankingPage";
 import { trpc, trpcClient } from "./utils/trpc";
 import { TeamProvider } from "@/hooks/use-team-context";
 
@@ -234,6 +235,14 @@ function App() {
               <RequireAuth>
                 <Layout>
                   <AISEOPage />
+                </Layout>
+              </RequireAuth>
+            )} />
+            {/* LLM Brand Ranking route */}
+            <Route path="/dashboard/llm-brand-ranking" component={() => (
+              <RequireAuth>
+                <Layout>
+                  <LLMBrandRankingPage />
                 </Layout>
               </RequireAuth>
             )} />

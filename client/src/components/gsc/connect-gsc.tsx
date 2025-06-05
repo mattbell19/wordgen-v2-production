@@ -12,8 +12,12 @@ export function ConnectGSC() {
   const { isConnected, isLoading, getAuthUrl, disconnect } = useGSC();
 
   const handleConnect = async () => {
-    // Directly open the Google authorization URL
-    window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fwebmasters.readonly%20profile%20email&prompt=consent&state=eyJ1c2VySWQiOjF9&response_type=code&client_id=889103348895-90on69fjcf586k9hjs1442o9i399lsm9.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Flocalhost%3A3001%2Fapi%2Fgsc%2Fcallback';
+    try {
+      const authUrl = await getAuthUrl.mutateAsync();
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Failed to get auth URL:', error);
+    }
   };
 
   const handleDisconnect = () => {
