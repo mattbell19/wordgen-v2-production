@@ -396,6 +396,57 @@ router.put('/recommendations/:recommendationId', requireAuth, asyncHandler(async
   }
 }));
 
+// ==================== CHATGPT SEARCH ROUTES ====================
+
+/**
+ * POST /api/brand-monitoring/search-chatgpt
+ * Search ChatGPT for brand mentions in specific queries
+ */
+router.post('/search-chatgpt', requireAuth, asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const { query, brandName, competitorName } = req.body;
+
+    if (!query || !brandName) {
+      return ApiResponse.badRequest(res, 'Query and brand name are required', 'MISSING_PARAMS');
+    }
+
+    logger.info(`[BrandMonitoringAPI] Searching ChatGPT for query: "${query}"`);
+
+    // Use the LLM monitoring service to query OpenAI
+    const result = await llmMonitoringService.queryLLMPlatform('openai', query, brandName);
+    
+    // Analyze the response for brand mentions
+    const response = result.response;
+    const brandMentioned = result.brandMentioned !== null;
+    const position = result.rankingPosition;
+    
+    // Determine sentiment (basic implementation)
+    const sentiment = result.sentiment || 'neutral';
+    
+    // Extract context snippet
+    const contextSnippet = result.contextSnippet || '';
+    
+    // Calculate confidence score
+    const confidenceScore = result.confidenceScore || 0;
+
+    const searchResult = {
+      query,
+      response,
+      brandMentioned,
+      position,
+      sentiment,
+      contextSnippet,
+      confidenceScore
+    };
+
+    return ApiResponse.success(res, searchResult, 'ChatGPT search completed successfully');
+
+  } catch (error) {
+    logger.error('[BrandMonitoringAPI] Error searching ChatGPT:', error);
+    return ApiResponse.error(res, 500, 'Failed to search ChatGPT', 'SEARCH_ERROR');
+  }
+}));
+
 // ==================== QUERY GENERATION ROUTES ====================
 
 /**

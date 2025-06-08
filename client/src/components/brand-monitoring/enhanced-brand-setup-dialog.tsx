@@ -41,10 +41,11 @@ interface EnhancedBrandSetupDialogProps {
 }
 
 interface GeneratedQuery {
-  query: string;
+  text: string;
   category: string;
-  rationale: string;
-  estimatedCost: number;
+  explanation: string;
+  priority: number;
+  estimatedRelevance: number;
 }
 
 interface QueryGenerationResult {
@@ -122,15 +123,15 @@ export const EnhancedBrandSetupDialog: React.FC<EnhancedBrandSetupDialogProps> =
       }
 
       const result: QueryGenerationResult = await response.json();
-      setGeneratedQueries(result.queries);
+      setGeneratedQueries(result.queries || []);
       
-      // Auto-select all generated queries
-      const allQueries = new Set(result.queries.map(q => q.query));
+      // Auto-select all generated queries with safe access
+      const allQueries = new Set(result.queries?.map(q => q.text) || []);
       setSelectedQueries(allQueries);
 
       toast({
         title: "Queries Generated Successfully!",
-        description: `Generated ${result.queries.length} AI-powered tracking queries`,
+        description: `Generated ${result.queries?.length || 0} AI-powered tracking queries`,
       });
 
       // Move to step 2
@@ -481,31 +482,31 @@ export const EnhancedBrandSetupDialog: React.FC<EnhancedBrandSetupDialogProps> =
                     <div
                       key={index}
                       className={`border rounded-lg p-3 cursor-pointer transition-all ${
-                        selectedQueries.has(query.query)
+                        selectedQueries.has(query.text)
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
-                      onClick={() => toggleQuerySelection(query.query)}
+                      onClick={() => toggleQuerySelection(query.text)}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                              selectedQueries.has(query.query)
+                              selectedQueries.has(query.text)
                                 ? 'border-blue-500 bg-blue-500 text-white'
                                 : 'border-gray-300'
                             }`}>
-                              {selectedQueries.has(query.query) && (
+                              {selectedQueries.has(query.text) && (
                                 <Check className="h-3 w-3" />
                               )}
                             </div>
-                            <span className="font-medium">{query.query}</span>
+                            <span className="font-medium">{query.text}</span>
                             <Badge variant="outline" size="sm">
                               {query.category}
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-600 mt-1 ml-6">
-                            {query.rationale}
+                            {query.explanation}
                           </p>
                         </div>
                       </div>
