@@ -125,15 +125,15 @@ export const BrandMonitoringDashboard: React.FC = () => {
 
   const fetchBrands = async () => {
     try {
-      console.log('BrandMonitoringDashboard: Fetching brands from /api/llm-seo/brands');
-      const response = await fetch('/api/llm-seo/brands');
+      console.log('BrandMonitoringDashboard: Fetching brands from /api/brand-monitoring');
+      const response = await fetch('/api/brand-monitoring');
       if (!response.ok) throw new Error('Failed to fetch brands');
       
       const data = await response.json();
-      setBrands(data || []);
+      setBrands(data.brands || []);
       
-      if (data?.length > 0 && !selectedBrand) {
-        setSelectedBrand(data[0]);
+      if (data.brands?.length > 0 && !selectedBrand) {
+        setSelectedBrand(data.brands[0]);
       }
     } catch (error) {
       console.error('Error fetching brands:', error);
@@ -149,7 +149,7 @@ export const BrandMonitoringDashboard: React.FC = () => {
 
   const fetchMentions = async (brandId: number) => {
     try {
-      const response = await fetch(`/api/llm-seo/analytics/${brandId}/mentions?limit=50`);
+      const response = await fetch(`/api/brand-monitoring/${brandId}/mentions?limit=50`);
       if (!response.ok) throw new Error('Failed to fetch mentions');
       
       const data = await response.json();
@@ -166,11 +166,11 @@ export const BrandMonitoringDashboard: React.FC = () => {
 
   const fetchJobs = async (brandId: number) => {
     try {
-      const response = await fetch(`/api/llm-seo/monitoring/${brandId}/status`);
+      const response = await fetch(`/api/brand-monitoring/${brandId}/jobs?limit=20`);
       if (!response.ok) throw new Error('Failed to fetch jobs');
       
       const data = await response.json();
-      setJobs(data.recentJobs || []);
+      setJobs(data.jobs || []);
     } catch (error) {
       console.error('Error fetching jobs:', error);
     }
@@ -190,7 +190,7 @@ export const BrandMonitoringDashboard: React.FC = () => {
 
   const startMonitoring = async (brandId: number) => {
     try {
-      const response = await fetch(`/api/llm-seo/brands/${brandId}`, {
+      const response = await fetch(`/api/brand-monitoring/${brandId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: true })
@@ -215,7 +215,7 @@ export const BrandMonitoringDashboard: React.FC = () => {
 
   const pauseMonitoring = async (brandId: number) => {
     try {
-      const response = await fetch(`/api/llm-seo/brands/${brandId}`, {
+      const response = await fetch(`/api/brand-monitoring/${brandId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: false })
@@ -240,7 +240,7 @@ export const BrandMonitoringDashboard: React.FC = () => {
 
   const queueJob = async (brandId: number, jobType: string) => {
     try {
-      const response = await fetch(`/api/llm-seo/monitoring/${brandId}/start`, {
+      const response = await fetch(`/api/brand-monitoring/${brandId}/jobs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
