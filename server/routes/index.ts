@@ -21,7 +21,7 @@ import { searchUsageRoutes } from './search-usage';
 import { sitemapRoutes } from './sitemap';
 import { keywordRoutes } from './keywords';
 import { projectRoutes } from './projects';
-import { llmSeoRoutes } from './llm-seo';
+// import { llmSeoRoutes } from './llm-seo';
 
 // Configure passport local strategy
 export function registerRoutes(app: express.Express): void {
@@ -85,7 +85,7 @@ export function registerRoutes(app: express.Express): void {
   router.use('/sitemap', sitemapRoutes);
   router.use('/keywords', keywordRoutes);
   router.use('/projects', projectRoutes);
-  router.use('/llm-seo', llmSeoRoutes);
+  // router.use('/llm-seo', llmSeoRoutes);
   console.log('Routes registered');
 
   // Mount all routes under /api
