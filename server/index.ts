@@ -73,8 +73,8 @@ app.use((req, res, next) => {
     'script-src': [
       "'self'",
       `'nonce-${nonce}'`,
-      // Only allow unsafe-inline and unsafe-eval in development
-      ...(isDev ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
+      // Allow unsafe-inline and unsafe-eval in both dev and prod temporarily
+      "'unsafe-inline'", "'unsafe-eval'",
       // Add unsafe-hashes to allow event handlers
       "'unsafe-hashes'",
       'https://js.stripe.com',
