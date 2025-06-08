@@ -492,8 +492,17 @@ router.post('/:id/queries/generate', requireAuth, asyncHandler(async (req: Reque
  */
 router.post('/queries/generate', requireAuth, asyncHandler(async (req: Request, res: Response) => {
   try {
+    // Set a timeout for this specific route
+    const timeoutId = setTimeout(() => {
+      if (!res.headersSent) {
+        logger.warn('[BrandMonitoringAPI] Query generation timeout reached');
+        return ApiResponse.error(res, 408, 'Request timeout - AI service is taking too long', 'TIMEOUT_ERROR');
+      }
+    }, 20000); // 20 second timeout
+
     const validation = validateRequest(queryGenerationSchema, req.body);
     if (!validation.success) {
+      clearTimeout(timeoutId);
       return ApiResponse.badRequest(res, validation.error, 'VALIDATION_ERROR');
     }
 
@@ -501,11 +510,26 @@ router.post('/queries/generate', requireAuth, asyncHandler(async (req: Request, 
 
     const result = await aiQueryGeneratorService.generateQueries(validation.data);
 
-    return ApiResponse.success(res, result, 'Queries generated successfully');
+    clearTimeout(timeoutId);
+
+    if (!res.headersSent) {
+      return ApiResponse.success(res, result, 'Queries generated successfully');
+    }
 
   } catch (error) {
     logger.error('[BrandMonitoringAPI] Error generating custom queries:', error);
-    return ApiResponse.error(res, 500, 'Failed to generate queries', 'GENERATION_ERROR');
+
+    if (!res.headersSent) {
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('timeout') || error.message.includes('TIMEOUT')) {
+          return ApiResponse.error(res, 408, 'AI service timeout - please try again', 'AI_TIMEOUT');
+        } else if (error.message.includes('OpenAI') || error.message.includes('Anthropic')) {
+          return ApiResponse.error(res, 503, 'AI service temporarily unavailable', 'AI_SERVICE_ERROR');
+        }
+      }
+      return ApiResponse.error(res, 500, 'Failed to generate queries', 'GENERATION_ERROR');
+    }
   }
 }));
 

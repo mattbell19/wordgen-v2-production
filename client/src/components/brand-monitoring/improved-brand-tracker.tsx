@@ -114,10 +114,13 @@ export const ImprovedBrandTracker: React.FC = () => {
     setCurrentStep(2);
   };
 
-  // Step 2: Generate queries using ChatGPT
-  const generateQueries = async () => {
+  // Step 2: Generate queries using ChatGPT with retry logic
+  const generateQueries = async (retryCount = 0) => {
     setLoading(true);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+
       const response = await fetch('/api/brand-monitoring/queries/generate', {
         method: 'POST',
         headers: {
@@ -130,29 +133,61 @@ export const ImprovedBrandTracker: React.FC = () => {
           competitors: [competitor],
           count: 10
         }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to generate queries');
+        throw new Error(error.message || `Server error: ${response.status}`);
       }
 
       const result = await response.json();
       const queries = result.queries || [];
-      
+
       setGeneratedQueries(queries);
-      
+
       toast({
         title: "Queries Generated Successfully!",
         description: `Generated ${queries.length} targeted queries for analysis`,
       });
-      
+
       setCurrentStep(3);
     } catch (error) {
+      console.error('Query generation error:', error);
+
+      // Handle specific error types
+      let errorMessage = "Failed to generate queries";
+      let canRetry = false;
+
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = "Request timed out. The AI service may be busy.";
+          canRetry = true;
+        } else if (error.message.includes('503') || error.message.includes('timeout')) {
+          errorMessage = "Service temporarily unavailable. Please try again.";
+          canRetry = true;
+        } else if (error.message.includes('401')) {
+          errorMessage = "Please log in again to continue.";
+        } else {
+          errorMessage = error.message;
+          canRetry = retryCount < 2; // Allow up to 2 retries
+        }
+      }
+
       toast({
         title: "Query Generation Failed",
-        description: error instanceof Error ? error.message : "Failed to generate queries",
-        variant: "destructive"
+        description: errorMessage + (canRetry && retryCount < 2 ? " Click retry to try again." : ""),
+        variant: "destructive",
+        action: canRetry && retryCount < 2 ? (
+          <button
+            onClick={() => generateQueries(retryCount + 1)}
+            className="bg-white text-red-600 px-3 py-1 rounded text-sm hover:bg-gray-100"
+          >
+            Retry
+          </button>
+        ) : undefined
       });
     } finally {
       setLoading(false);

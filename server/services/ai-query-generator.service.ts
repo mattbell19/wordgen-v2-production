@@ -63,18 +63,22 @@ export class AIQueryGeneratorService {
    * Initialize AI clients based on available API keys
    */
   private initializeAIClients(): void {
-    if (process.env.OPENAI_API_KEY) {
+    if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'placeholder_openai_key') {
       this.openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
+        timeout: 15000, // 15 second timeout
+        maxRetries: 2,
       });
-      logger.info('[AIQueryGenerator] OpenAI client initialized');
+      logger.info('[AIQueryGenerator] OpenAI client initialized with timeout');
     }
 
-    if (process.env.ANTHROPIC_API_KEY) {
+    if (process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'placeholder_anthropic_key') {
       this.anthropic = new Anthropic({
         apiKey: process.env.ANTHROPIC_API_KEY,
+        timeout: 15000, // 15 second timeout
+        maxRetries: 2,
       });
-      logger.info('[AIQueryGenerator] Anthropic client initialized');
+      logger.info('[AIQueryGenerator] Anthropic client initialized with timeout');
     }
 
     if (!this.openai && !this.anthropic) {
@@ -100,8 +104,14 @@ export class AIQueryGeneratorService {
         throw new Error('No AI clients available for query generation');
       }
 
-      // Generate queries using AI
-      const queries = await this.generateQueriesWithAI(request, aiClient);
+      // Generate queries using AI with fallback
+      let queries: GeneratedQuery[];
+      try {
+        queries = await this.generateQueriesWithAI(request, aiClient);
+      } catch (error) {
+        logger.warn('[AIQueryGenerator] All AI services failed, using fallback templates:', error);
+        queries = this.generateFallbackQueries(request);
+      }
 
       // Post-process and enhance queries
       const enhancedQueries = await this.enhanceQueries(queries, request);
@@ -190,22 +200,45 @@ export class AIQueryGeneratorService {
   }
 
   /**
-   * Generate queries using AI
+   * Generate queries using AI with fallback mechanism
    */
   private async generateQueriesWithAI(
-    request: QueryGenerationRequest, 
+    request: QueryGenerationRequest,
     client: 'openai' | 'anthropic'
   ): Promise<GeneratedQuery[]> {
-    
+
     const prompt = this.buildQueryGenerationPrompt(request);
 
-    if (client === 'openai' && this.openai) {
-      return await this.generateWithOpenAI(prompt, request);
-    } else if (client === 'anthropic' && this.anthropic) {
-      return await this.generateWithAnthropic(prompt, request);
+    // Try primary client first
+    try {
+      if (client === 'openai' && this.openai) {
+        logger.info('[AIQueryGenerator] Attempting OpenAI generation');
+        return await this.generateWithOpenAI(prompt, request);
+      } else if (client === 'anthropic' && this.anthropic) {
+        logger.info('[AIQueryGenerator] Attempting Anthropic generation');
+        return await this.generateWithAnthropic(prompt, request);
+      }
+    } catch (error) {
+      logger.warn(`[AIQueryGenerator] Primary AI client (${client}) failed, trying fallback:`, error);
+
+      // Try fallback client
+      try {
+        if (client === 'openai' && this.anthropic) {
+          logger.info('[AIQueryGenerator] Falling back to Anthropic');
+          return await this.generateWithAnthropic(prompt, request);
+        } else if (client === 'anthropic' && this.openai) {
+          logger.info('[AIQueryGenerator] Falling back to OpenAI');
+          return await this.generateWithOpenAI(prompt, request);
+        }
+      } catch (fallbackError) {
+        logger.error('[AIQueryGenerator] Fallback AI client also failed:', fallbackError);
+      }
+
+      // If both fail, throw the original error
+      throw error;
     }
 
-    throw new Error(`AI client not available: ${client}`);
+    throw new Error(`No AI clients available`);
   }
 
   /**
@@ -258,8 +291,10 @@ Generate exactly ${count} high-quality, diverse queries:`;
     if (!this.openai) throw new Error('OpenAI client not available');
 
     try {
+      logger.info('[AIQueryGenerator] Starting OpenAI query generation');
+
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-3.5-turbo', // Faster model to reduce timeout risk
         messages: [
           {
             role: 'system',
@@ -270,10 +305,12 @@ Generate exactly ${count} high-quality, diverse queries:`;
             content: prompt
           }
         ],
-        temperature: 0.8, // Higher creativity for diverse queries
-        max_tokens: 4000,
+        temperature: 0.7, // Slightly reduced for faster processing
+        max_tokens: 2000, // Reduced to speed up response
         response_format: { type: 'json_object' }
       });
+
+      logger.info('[AIQueryGenerator] OpenAI response received');
 
       const content = response.choices[0]?.message?.content;
       if (!content) {
@@ -282,7 +319,7 @@ Generate exactly ${count} high-quality, diverse queries:`;
 
       // Parse the JSON response
       const parsed = JSON.parse(content);
-      
+
       // Handle different response formats
       let queries: any[] = [];
       if (Array.isArray(parsed)) {
@@ -293,6 +330,7 @@ Generate exactly ${count} high-quality, diverse queries:`;
         throw new Error('Invalid response format from OpenAI');
       }
 
+      logger.info(`[AIQueryGenerator] Successfully parsed ${queries.length} queries from OpenAI`);
       return this.validateAndNormalizeQueries(queries);
 
     } catch (error) {
@@ -533,6 +571,45 @@ Generate exactly ${count} high-quality, diverse queries:`;
       logger.error('[AIQueryGenerator] Failed to generate query suggestions:', error);
       throw error;
     }
+  }
+
+  /**
+   * Generate fallback queries when AI services are unavailable
+   */
+  private generateFallbackQueries(request: QueryGenerationRequest): GeneratedQuery[] {
+    const { brandName, competitors = [], count = 10 } = request;
+    const templates = [
+      { text: `What is ${brandName}?`, category: 'direct' },
+      { text: `How does ${brandName} work?`, category: 'direct' },
+      { text: `${brandName} features and benefits`, category: 'direct' },
+      { text: `${brandName} pricing and plans`, category: 'direct' },
+      { text: `${brandName} vs competitors`, category: 'comparative' },
+      { text: `Best alternatives to ${brandName}`, category: 'comparative' },
+      { text: `${brandName} reviews and ratings`, category: 'use_case' },
+      { text: `How to use ${brandName} effectively`, category: 'use_case' },
+      { text: `${brandName} customer support`, category: 'problem_solving' },
+      { text: `${brandName} integration options`, category: 'industry_specific' },
+    ];
+
+    // Add competitor comparison queries
+    competitors.forEach(competitor => {
+      templates.push(
+        { text: `${brandName} vs ${competitor}`, category: 'comparative' },
+        { text: `Should I choose ${brandName} or ${competitor}?`, category: 'comparative' }
+      );
+    });
+
+    // Convert templates to GeneratedQuery format
+    const queries: GeneratedQuery[] = templates.slice(0, count).map(template => ({
+      text: template.text,
+      category: template.category,
+      priority: 50,
+      estimatedRelevance: 70,
+      explanation: `Fallback template query for ${template.category} category`
+    }));
+
+    logger.info(`[AIQueryGenerator] Generated ${queries.length} fallback queries`);
+    return queries;
   }
 
   /**
