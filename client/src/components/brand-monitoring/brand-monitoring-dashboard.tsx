@@ -341,26 +341,26 @@ export const BrandMonitoringDashboard: React.FC = () => {
       </div>
 
       {/* System Status Banner */}
-      {systemStatus && (
+      {systemStatus && systemStatus.scheduler && systemStatus.queue && systemStatus.platforms && (
         <Card className="border-blue-200 bg-blue-50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${systemStatus.scheduler.isRunning ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <div className={`w-2 h-2 rounded-full ${systemStatus.scheduler?.isRunning ? 'bg-green-500' : 'bg-red-500'}`} />
                   <span className="text-sm font-medium">
-                    Scheduler {systemStatus.scheduler.isRunning ? 'Running' : 'Stopped'}
+                    Scheduler {systemStatus.scheduler?.isRunning ? 'Running' : 'Stopped'}
                   </span>
                 </div>
                 <div className="text-sm text-gray-600">
-                  Queue: {systemStatus.queue.pending} pending, {systemStatus.queue.running} running
+                  Queue: {systemStatus.queue?.pending || 0} pending, {systemStatus.queue?.running || 0} running
                 </div>
                 <div className="text-sm text-gray-600">
-                  Success Rate: {systemStatus.queue.successRate}%
+                  Success Rate: {systemStatus.queue?.successRate || 0}%
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {systemStatus.platforms.map(platform => (
+                {systemStatus.platforms?.map(platform => (
                   <Badge
                     key={platform.name}
                     variant={platform.enabled ? "default" : "secondary"}
@@ -368,7 +368,7 @@ export const BrandMonitoringDashboard: React.FC = () => {
                   >
                     {platform.name}
                   </Badge>
-                ))}
+                )) || []}
               </div>
             </div>
           </CardContent>

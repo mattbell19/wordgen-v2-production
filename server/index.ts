@@ -72,8 +72,9 @@ app.use((req, res, next) => {
     'default-src': ["'self'"],
     'script-src': [
       "'self'",
-      `'nonce-${nonce}'`,
-      // Allow unsafe-inline and unsafe-eval in both dev and prod temporarily
+      // Remove nonces and hashes temporarily to allow unsafe-inline to work
+      // `'nonce-${nonce}'`,
+      // Allow unsafe-inline and unsafe-eval to fix CSP issues
       "'unsafe-inline'", "'unsafe-eval'",
       // Add unsafe-hashes to allow event handlers
       "'unsafe-hashes'",
@@ -82,9 +83,9 @@ app.use((req, res, next) => {
       'https://m.stripe.com',
       'https://*.posthog.com',
       'https://eu.i.posthog.com',
-      // Add specific hashes for known inline scripts
-      "'sha256-5DA+a07wxWmEka9IdoWjSPVHb17Cp5284/lJzfbl8KA='",
-      "'sha256-/5Guo2nzv5n/w6ukZpOBZOtTJBJPSkJ6mhHpnBgm3Ls='",
+      // Remove specific hashes temporarily
+      // "'sha256-5DA+a07wxWmEka9IdoWjSPVHb17Cp5284/lJzfbl8KA='",
+      // "'sha256-/5Guo2nzv5n/w6ukZpOBZOtTJBJPSkJ6mhHpnBgm3Ls='",
     ],
     'style-src': [
       "'self'",
