@@ -362,12 +362,22 @@ function UsageStats() {
     }
   };
 
+  // Use a ref to track if we've already attempted sync to prevent infinite loops
+  const syncAttemptedRef = React.useRef(false);
+
   // Mutation to sync usage data
   const syncUsage = useMutation({
     mutationFn: handleSync,
     onError: (error) => {
       console.error('Sync mutation error:', error);
-    }
+      // Reset sync attempt flag on error to allow retry
+      syncAttemptedRef.current = false;
+    },
+    onSuccess: () => {
+      // Reset sync attempt flag on success
+      syncAttemptedRef.current = false;
+    },
+    retry: false, // Don't auto-retry to prevent loops
   });
 
   // Query for usage data
@@ -392,23 +402,34 @@ function UsageStats() {
       }
     },
     staleTime: 300000, // 5 minutes
+    gcTime: 600000, // 10 minutes - keep in cache longer
     retry: 1, // Only retry once
+    refetchOnWindowFocus: false, // Prevent refetch on window focus
+    refetchOnMount: false, // Don't refetch on component mount if data exists
   });
 
   // Auto-sync data if usage is available but shows all zeros (indicates new user or stale data)
   React.useEffect(() => {
-    if (usage && !isLoading && !error) {
-      const hasNoData = usage.totalArticlesGenerated === 0 && 
-                        usage.totalWordCount === 0 && 
+    if (usage && !isLoading && !error && !syncAttemptedRef.current && !syncUsage.isLoading) {
+      const hasNoData = usage.totalArticlesGenerated === 0 &&
+                        usage.totalWordCount === 0 &&
                         usage.totalKeywordsAnalyzed === 0 &&
                         !usage.lastArticleDate;
-      
+
       if (hasNoData) {
         console.log('No usage data found, triggering automatic sync...');
+        syncAttemptedRef.current = true; // Mark that we've attempted sync
         syncUsage.mutate();
       }
     }
-  }, [usage, isLoading, error]);
+  }, [usage, isLoading, error, syncUsage.isLoading]);
+
+  // Reset sync attempt flag when user manually syncs or when there's actual data
+  React.useEffect(() => {
+    if (usage && (usage.totalArticlesGenerated > 0 || usage.totalWordCount > 0)) {
+      syncAttemptedRef.current = false;
+    }
+  }, [usage]);
 
   // Remove automatic sync on mount to prevent infinite re-renders
   // Users can manually sync if needed using the sync button

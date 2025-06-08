@@ -83,8 +83,9 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     },
     retry: 1,
     retryDelay: 1000,
-    refetchOnWindowFocus: true,
-    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent redundant calls
+    staleTime: 300000, // 5 minutes - longer cache time
+    gcTime: 600000, // 10 minutes - keep in cache longer
   });
 
   // Fetch active team details if user has an activeTeamId
@@ -124,8 +125,9 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     },
     retry: 1,
     retryDelay: 1000,
-    refetchOnWindowFocus: true,
-    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: false, // Disable refetch on window focus
+    staleTime: 300000, // 5 minutes - longer cache time
+    gcTime: 600000, // 10 minutes - keep in cache longer
   });
 
   // Update active team when data changes
