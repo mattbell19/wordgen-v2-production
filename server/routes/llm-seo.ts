@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { LLMMonitoringService } from '../services/llm-monitoring.service.js';
 import { BrandAnalysisService } from '../services/brand-analysis.service.js';
 import { OptimizationEngine } from '../services/optimization-engine.service.js';
-import { authMiddleware } from '../middleware/consolidated-auth.js';
+import { requireAuth } from '../middleware/consolidated-auth.js';
 import { validateRequest } from '../middleware/validate-request.js';
 import { logger } from '../lib/logger.js';
 import { 
@@ -19,7 +19,7 @@ const brandAnalysisService = new BrandAnalysisService();
 const optimizationEngine = new OptimizationEngine();
 
 // Apply auth middleware to all routes
-router.use(authMiddleware);
+router.use(requireAuth);
 
 // Validation schemas
 const brandIdSchema = z.object({
