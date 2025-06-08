@@ -191,6 +191,13 @@ POST https://wordgen-v2-production-15d78da87625.herokuapp.com/api/brand-monitori
 - ✅ Better error categorization and response codes
 - ✅ Prevented duplicate responses when timeouts occur
 
+#### 5. **Dashboard & Performance Fixes (2025-06-08 21:30)**
+- ✅ Fixed infinite loop in usage data sync causing "Failed to fetch" errors
+- ✅ Added sync attempt tracking to prevent redundant API calls
+- ✅ Disabled refetchOnWindowFocus for team queries
+- ✅ Improved query caching with longer staleTime (5 minutes) and gcTime (10 minutes)
+- ✅ Reduced redundant team context API calls
+
 ## 🧪 TESTING RESULTS
 
 ### ✅ **CONFIRMED WORKING**
@@ -199,6 +206,9 @@ POST https://wordgen-v2-production-15d78da87625.herokuapp.com/api/brand-monitori
 - [x] Authentication middleware working properly
 - [x] Error handling improvements deployed
 - [x] Timeout configurations active
+- [x] Dashboard infinite loop issues resolved (2025-06-08 21:30 UTC)
+- [x] Team context redundant API calls fixed
+- [x] Usage sync loop prevention implemented
 
 ### 🔄 **READY FOR USER TESTING**
 - [ ] Complete brand tracker flow with authenticated user
