@@ -79,7 +79,7 @@ export const authRateLimiter = rateLimit({
  */
 export const apiRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 100, // Increased for normal API usage
+  max: 200, // Increased for normal API usage
   message: {
     success: false,
     error: 'RATE_LIMIT_EXCEEDED',

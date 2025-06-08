@@ -125,6 +125,7 @@ export const BrandMonitoringDashboard: React.FC = () => {
 
   const fetchBrands = async () => {
     try {
+      console.log('BrandMonitoringDashboard: Fetching brands from /api/brand-monitoring');
       const response = await fetch('/api/brand-monitoring');
       if (!response.ok) throw new Error('Failed to fetch brands');
       
