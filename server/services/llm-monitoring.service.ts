@@ -543,3 +543,6 @@ export class LLMMonitoringService {
     }
   }
 }
+
+// Export singleton instance
+export const llmMonitoringService = new LLMMonitoringService();
