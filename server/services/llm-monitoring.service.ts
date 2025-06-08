@@ -1,4 +1,4 @@
-import { db } from '../db/index.js';
+import { db } from '../db/index';
 import { 
   brandMonitoring, 
   llmMentions, 
@@ -10,9 +10,9 @@ import {
   type SelectLlmMention,
   type InsertMonitoringJob,
   type SelectMonitoringJob
-} from '../../db/schema.js';
+} from '../../db/schema';
 import { eq, and, desc, gte, lte, inArray } from 'drizzle-orm';
-import { logger } from '../lib/logger.js';
+import { logger } from '../lib/logger';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 

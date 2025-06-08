@@ -1,48 +1,43 @@
-import { describe, it, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
-import { LLMMonitoringService } from '../llm-monitoring.service.js';
-import { db } from '../../db/index.js';
-import { brandMonitoring, llmMentions, monitoringJobs } from '../../../db/schema.js';
-import { logger } from '../../lib/logger.js';
+import { LLMMonitoringService } from '../llm-monitoring.service';
+import { db } from '../../db/index';
+import { brandMonitoring, llmMentions, monitoringJobs } from '../../../db/schema';
+import { logger } from '../../lib/logger';
 
 // Mock dependencies
-vi.mock('../../db/index.js', () => ({
+jest.mock('../../db/index', () => ({
   db: {
-    insert: vi.fn(),
-    select: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn()
+    insert: jest.fn(),
+    select: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn()
   }
 }));
 
-vi.mock('../../lib/logger.js', () => ({
+jest.mock('../../lib/logger', () => ({
   logger: {
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn()
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn()
   }
 }));
 
-vi.mock('openai', () => {
-  return {
-    default: vi.fn().mockImplementation(() => ({
-      chat: {
-        completions: {
-          create: vi.fn()
-        }
+jest.mock('openai', () => {
+  return jest.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: jest.fn()
       }
-    }))
-  };
+    }
+  }));
 });
 
-vi.mock('@anthropic-ai/sdk', () => {
-  return {
-    default: vi.fn().mockImplementation(() => ({
-      messages: {
-        create: vi.fn()
-      }
-    }))
-  };
+jest.mock('@anthropic-ai/sdk', () => {
+  return jest.fn().mockImplementation(() => ({
+    messages: {
+      create: jest.fn()
+    }
+  }));
 });
 
 describe('LLMMonitoringService', () => {
@@ -50,7 +45,7 @@ describe('LLMMonitoringService', () => {
   let mockDb: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
     mockDb = db as any;
     
     // Set up environment variables for testing
@@ -61,7 +56,7 @@ describe('LLMMonitoringService', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('createBrandMonitoring', () => {
@@ -86,8 +81,8 @@ describe('LLMMonitoringService', () => {
       };
 
       mockDb.insert.mockReturnValue({
-        values: vi.fn().mockReturnValue({
-          returning: vi.fn().mockResolvedValue([mockResult])
+        values: jest.fn().mockReturnValue({
+          returning: jest.fn().mockResolvedValue([mockResult])
         })
       });
 
@@ -110,8 +105,8 @@ describe('LLMMonitoringService', () => {
       };
 
       mockDb.insert.mockReturnValue({
-        values: vi.fn().mockReturnValue({
-          returning: vi.fn().mockRejectedValue(new Error('Database error'))
+        values: jest.fn().mockReturnValue({
+          returning: jest.fn().mockRejectedValue(new Error('Database error'))
         })
       });
 
@@ -140,9 +135,9 @@ describe('LLMMonitoringService', () => {
       ];
 
       mockDb.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue(mockResults)
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockReturnValue({
+            orderBy: jest.fn().mockResolvedValue(mockResults)
           })
         })
       });
@@ -155,9 +150,9 @@ describe('LLMMonitoringService', () => {
 
     it('should handle database errors', async () => {
       mockDb.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockRejectedValue(new Error('Database error'))
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockReturnValue({
+            orderBy: jest.fn().mockRejectedValue(new Error('Database error'))
           })
         })
       });
@@ -189,9 +184,9 @@ describe('LLMMonitoringService', () => {
       };
 
       mockDb.update.mockReturnValue({
-        set: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue([mockResult])
+        set: jest.fn().mockReturnValue({
+          where: jest.fn().mockReturnValue({
+            returning: jest.fn().mockResolvedValue([mockResult])
           })
         })
       });
@@ -204,9 +199,9 @@ describe('LLMMonitoringService', () => {
 
     it('should throw error when brand not found', async () => {
       mockDb.update.mockReturnValue({
-        set: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue([])
+        set: jest.fn().mockReturnValue({
+          where: jest.fn().mockReturnValue({
+            returning: jest.fn().mockResolvedValue([])
           })
         })
       });
@@ -220,7 +215,7 @@ describe('LLMMonitoringService', () => {
   describe('deleteBrandMonitoring', () => {
     it('should delete brand monitoring configuration', async () => {
       mockDb.delete.mockReturnValue({
-        where: vi.fn().mockResolvedValue(undefined)
+        where: jest.fn().mockResolvedValue(undefined)
       });
 
       await service.deleteBrandMonitoring(1, 1);
@@ -231,7 +226,7 @@ describe('LLMMonitoringService', () => {
 
     it('should handle deletion errors', async () => {
       mockDb.delete.mockReturnValue({
-        where: vi.fn().mockRejectedValue(new Error('Database error'))
+        where: jest.fn().mockRejectedValue(new Error('Database error'))
       });
 
       await expect(service.deleteBrandMonitoring(1, 1)).rejects.toThrow(
@@ -298,8 +293,8 @@ describe('LLMMonitoringService', () => {
       };
 
       mockDb.insert.mockReturnValue({
-        values: vi.fn().mockReturnValue({
-          returning: vi.fn().mockResolvedValue([mockJob])
+        values: jest.fn().mockReturnValue({
+          returning: jest.fn().mockResolvedValue([mockJob])
         })
       });
 
@@ -331,12 +326,23 @@ describe('LLMMonitoringService', () => {
         }
       ];
 
+      const mockQuery = {
+        limit: jest.fn().mockReturnThis(),
+        offset: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue(mockMentions)
+      };
+
       mockDb.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue(mockMentions)
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockReturnValue({
+            orderBy: jest.fn().mockReturnValue(mockQuery)
           })
         })
+      });
+
+      // Mock the promise-like behavior
+      Object.assign(mockQuery, {
+        then: jest.fn().mockImplementation((resolve) => resolve(mockMentions))
       });
 
       const result = await service.getBrandMentions(1, {
@@ -367,10 +373,10 @@ describe('LLMMonitoringService', () => {
       ];
 
       mockDb.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue(mockJobs)
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockReturnValue({
+            orderBy: jest.fn().mockReturnValue({
+              limit: jest.fn().mockResolvedValue(mockJobs)
             })
           })
         })
@@ -416,9 +422,9 @@ describe('LLMMonitoringService', () => {
   describe('error handling', () => {
     it('should handle database connection errors gracefully', async () => {
       mockDb.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockRejectedValue(new Error('Connection failed'))
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockReturnValue({
+            orderBy: jest.fn().mockRejectedValue(new Error('Connection failed'))
           })
         })
       });
@@ -444,8 +450,8 @@ describe('LLMMonitoringService', () => {
       };
 
       mockDb.insert.mockReturnValue({
-        values: vi.fn().mockReturnValue({
-          returning: vi.fn().mockRejectedValue(new Error('Validation error'))
+        values: jest.fn().mockReturnValue({
+          returning: jest.fn().mockRejectedValue(new Error('Validation error'))
         })
       });
 
