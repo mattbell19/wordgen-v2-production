@@ -13,13 +13,22 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Wand2, RefreshCw, Check, Sparkles, Target, Users, Building2 } from 'lucide-react';
 
 interface BrandSetupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onBrandCreated: () => void;
+}
+
+interface GeneratedQuery {
+  query: string;
+  category: string;
+  rationale: string;
+  estimatedCost: number;
 }
 
 export const BrandSetupDialog: React.FC<BrandSetupDialogProps> = ({
@@ -29,15 +38,25 @@ export const BrandSetupDialog: React.FC<BrandSetupDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [generatingQueries, setGeneratingQueries] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
+  
   const [formData, setFormData] = useState({
     brandName: '',
     description: '',
+    industry: '',
+    targetAudience: '',
+    keyProducts: [] as string[],
     trackingQueries: [] as string[],
     competitors: [] as string[],
     monitoringFrequency: 'daily' as 'hourly' | 'daily' | 'weekly' | 'monthly'
   });
+  
+  const [generatedQueries, setGeneratedQueries] = useState<GeneratedQuery[]>([]);
+  const [selectedQueries, setSelectedQueries] = useState<Set<string>>(new Set());
   const [newQuery, setNewQuery] = useState('');
   const [newCompetitor, setNewCompetitor] = useState('');
+  const [newProduct, setNewProduct] = useState('');
 
   const handleSubmit = async () => {
     if (!formData.brandName.trim()) {

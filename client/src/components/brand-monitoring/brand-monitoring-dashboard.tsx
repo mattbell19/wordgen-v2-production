@@ -25,7 +25,7 @@ import {
   Bot
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { BrandSetupDialog } from './brand-setup-dialog';
+import { EnhancedBrandSetupDialog } from './enhanced-brand-setup-dialog';
 import { BrandMentionsTable } from './brand-mentions-table';
 import { BrandAnalyticsChart } from './brand-analytics-chart';
 import { QueryGenerationDialog } from './query-generation-dialog';
@@ -376,19 +376,55 @@ export const BrandMonitoringDashboard: React.FC = () => {
       )}
 
       {brands.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-semibold mb-2">Get Started with Brand Monitoring</h3>
-            <p className="text-gray-600 mb-4">
-              Track how your brand appears in AI responses across ChatGPT, Claude, and other LLMs
+        <div className="text-center py-16">
+          <div className="max-w-md mx-auto">
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
+              <Target className="h-12 w-12 text-blue-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Welcome to AI Brand Monitoring
+            </h2>
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              Track how your brand appears in AI language model responses. Get insights, 
+              monitor sentiment, and optimize your brand presence across ChatGPT, Claude, and more.
             </p>
-            <Button onClick={() => setShowSetupDialog(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Your First Brand Profile
-            </Button>
-          </CardContent>
-        </Card>
+            
+            <div className="space-y-4">
+              <Button 
+                onClick={() => setShowSetupDialog(true)}
+                size="lg"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Create Your First Brand Profile
+              </Button>
+              
+              <div className="grid grid-cols-3 gap-4 mt-8 text-sm">
+                <div className="text-center">
+                  <div className="bg-blue-100 rounded-lg p-3 mb-2">
+                    <Bot className="h-6 w-6 text-blue-600 mx-auto" />
+                  </div>
+                  <div className="font-medium">AI-Powered</div>
+                  <div className="text-gray-500">Smart query generation</div>
+                </div>
+                <div className="text-center">
+                  <div className="bg-green-100 rounded-lg p-3 mb-2">
+                    <TrendingUp className="h-6 w-6 text-green-600 mx-auto" />
+                  </div>
+                  <div className="font-medium">Real-time</div>
+                  <div className="text-gray-500">Live monitoring</div>
+                </div>
+                <div className="text-center">
+                  <div className="bg-purple-100 rounded-lg p-3 mb-2">
+                    <Target className="h-6 w-6 text-purple-600 mx-auto" />
+                  </div>
+                  <div className="font-medium">Actionable</div>
+                  <div className="text-gray-500">Optimization tips</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       ) : (
         <>
           {/* Brand Selector */}
@@ -649,7 +685,7 @@ export const BrandMonitoringDashboard: React.FC = () => {
       )}
 
       {/* Dialogs */}
-      <BrandSetupDialog 
+      <EnhancedBrandSetupDialog 
         open={showSetupDialog}
         onOpenChange={setShowSetupDialog}
         onBrandCreated={fetchBrands}
