@@ -100,7 +100,7 @@ export const EnhancedBrandSetupDialog: React.FC<EnhancedBrandSetupDialogProps> =
 
     setGeneratingQueries(true);
     try {
-      const response = await fetch('/api/brand-monitoring/generate-queries', {
+      const response = await fetch('/api/brand-monitoring/queries/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
