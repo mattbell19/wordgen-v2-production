@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrandMonitoringDashboard } from '@/components/brand-monitoring/brand-monitoring-dashboard';
 import { ImprovedBrandTracker } from '@/components/brand-monitoring/improved-brand-tracker';
+import { BrandTrackerWrapper } from '@/components/brand-monitoring/brand-tracker-wrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Target, BarChart3 } from 'lucide-react';
@@ -43,9 +44,9 @@ export const LLMBrandRankingPage: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="py-6">
+      <div className={activeView === 'tracker' ? '' : 'py-6'}>
         {activeView === 'tracker' ? (
-          <ImprovedBrandTracker />
+          <BrandTrackerWrapper />
         ) : (
           <div className="max-w-7xl mx-auto px-6">
             <BrandMonitoringDashboard />

@@ -105,16 +105,19 @@ export const BrandMonitoringDashboard: React.FC = () => {
   useEffect(() => {
     fetchBrands();
     fetchSystemStatus();
-    // Set up polling for real-time updates
-    const interval = setInterval(() => {
-      if (selectedBrand) {
+    // Set up polling for real-time updates - only when needed
+    let interval: NodeJS.Timeout | null = null;
+    if (selectedBrand && activeTab === 'jobs') {
+      interval = setInterval(() => {
         fetchJobs(selectedBrand.id);
-      }
-      fetchSystemStatus();
-    }, 10000); // Poll every 10 seconds
+        fetchSystemStatus();
+      }, 30000); // Poll every 30 seconds, only when on jobs tab
+    }
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [selectedBrand, activeTab]);
 
   useEffect(() => {
     if (selectedBrand) {

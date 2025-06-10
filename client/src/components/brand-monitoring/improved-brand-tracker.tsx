@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { ErrorMessage } from './error-message';
 import { 
   Brain, 
   Search, 
@@ -59,6 +60,14 @@ interface BrandAnalysisResult {
   recommendations: string[];
 }
 
+// Loading skeleton component
+const LoadingSkeleton = () => (
+  <div className="animate-pulse">
+    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+  </div>
+);
+
 export const ImprovedBrandTracker: React.FC = () => {
   const { toast } = useToast();
   
@@ -70,6 +79,7 @@ export const ImprovedBrandTracker: React.FC = () => {
   // Process state
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<{ title: string; message: string } | null>(null);
   const [generatedQueries, setGeneratedQueries] = useState<GeneratedQuery[]>([]);
   const [searchResults, setSearchResults] = useState<ChatGPTSearchResult[]>([]);
   const [finalAnalysis, setFinalAnalysis] = useState<BrandAnalysisResult | null>(null);
@@ -117,9 +127,27 @@ export const ImprovedBrandTracker: React.FC = () => {
   // Step 2: Generate queries using ChatGPT with retry logic
   const generateQueries = async (retryCount = 0) => {
     setLoading(true);
+    setError(null);
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        setLoading(false);
+        toast({
+            title: "Request Timeout",
+            description: "The AI service is taking longer than expected. Please try again.",
+            variant: "destructive",
+            action: retryCount < 2 ? (
+              <Button
+                onClick={() => generateQueries(retryCount + 1)}
+                size="sm"
+                variant="outline"
+              >
+                Retry
+              </Button>
+            ) : undefined
+          });
+      }, 25000); // 25 second timeout
 
       const response = await fetch('/api/brand-monitoring/queries/generate', {
         method: 'POST',
@@ -176,19 +204,21 @@ export const ImprovedBrandTracker: React.FC = () => {
         }
       }
 
-      toast({
+      setError({
         title: "Query Generation Failed",
-        description: errorMessage + (canRetry && retryCount < 2 ? " Click retry to try again." : ""),
-        variant: "destructive",
-        action: canRetry && retryCount < 2 ? (
-          <button
-            onClick={() => generateQueries(retryCount + 1)}
-            className="bg-white text-red-600 px-3 py-1 rounded text-sm hover:bg-gray-100"
-          >
-            Retry
-          </button>
-        ) : undefined
+        message: errorMessage
       });
+      
+      if (canRetry && retryCount < 2) {
+        // Auto-retry after a delay
+        setTimeout(() => generateQueries(retryCount + 1), 2000);
+      } else {
+        toast({
+          title: "Query Generation Failed",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -294,25 +324,27 @@ export const ImprovedBrandTracker: React.FC = () => {
     setGeneratedQueries([]);
     setSearchResults([]);
     setFinalAnalysis(null);
+    setError(null);
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header */}
+    <div className="max-w-4xl mx-auto p-4 lg:p-6 space-y-4 lg:space-y-6">
+      {/* Header - Responsive */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold flex items-center justify-center gap-2">
-          <Target className="h-8 w-8 text-blue-600" />
+        <h1 className="text-2xl lg:text-3xl font-bold flex items-center justify-center gap-2">
+          <Target className="h-6 w-6 lg:h-8 lg:w-8 text-blue-600" />
           AI Brand Tracker
         </h1>
-        <p className="text-gray-600 mt-2">
-          Comprehensive competitor analysis using AI-powered query generation and ChatGPT search
+        <p className="text-sm lg:text-base text-gray-600 mt-2 px-4">
+          Track your brand visibility across AI language models
         </p>
       </div>
 
-      {/* Progress Steps */}
-      <div className="flex items-center justify-between mb-8">
-        {steps.map((step, index) => (
-          <div key={step.id} className="flex items-center">
+      {/* Progress Steps - Responsive */}
+      <div className="flex items-center justify-between mb-8 overflow-x-auto">
+        <div className="flex items-center min-w-max px-2">
+          {steps.map((step, index) => (
+            <div key={step.id} className="flex items-center">
             <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
               step.completed 
                 ? 'bg-green-500 border-green-500 text-white' 
@@ -323,16 +355,17 @@ export const ImprovedBrandTracker: React.FC = () => {
               {step.completed ? <CheckCircle className="h-5 w-5" /> : step.id}
             </div>
             <div className="ml-3 text-left">
-              <p className={`text-sm font-medium ${step.completed ? 'text-green-600' : currentStep === step.id ? 'text-blue-600' : 'text-gray-500'}`}>
+              <p className={`text-xs lg:text-sm font-medium ${step.completed ? 'text-green-600' : currentStep === step.id ? 'text-blue-600' : 'text-gray-500'}`}>
                 {step.title}
               </p>
-              <p className="text-xs text-gray-500">{step.description}</p>
+              <p className="text-xs text-gray-500 hidden lg:block">{step.description}</p>
             </div>
-            {index < steps.length - 1 && (
-              <ArrowRight className="h-4 w-4 text-gray-400 mx-4" />
-            )}
-          </div>
-        ))}
+              {index < steps.length - 1 && (
+                <ArrowRight className="h-4 w-4 text-gray-400 mx-2 lg:mx-4 flex-shrink-0" />
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Step Content */}
@@ -393,11 +426,31 @@ export const ImprovedBrandTracker: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {error && (
+              <ErrorMessage
+                title={error.title}
+                message={error.message}
+                onRetry={() => generateQueries()}
+              />
+            )}
             <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">
-                Using ChatGPT to generate targeted queries for: <strong>{brand}</strong> vs <strong>{competitor}</strong> in <strong>{keyword}</strong>
-              </p>
-              <Button 
+              {loading ? (
+                <div className="space-y-4">
+                  <RefreshCw className="h-8 w-8 animate-spin mx-auto text-blue-600" />
+                  <p className="text-gray-600">
+                    Generating AI-powered queries...
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    This may take up to 20 seconds
+                  </p>
+                  <Progress value={33} className="max-w-xs mx-auto" />
+                </div>
+              ) : (
+                <>
+                  <p className="text-gray-600 mb-4">
+                    Using AI to generate targeted queries for: <strong>{brand}</strong> vs <strong>{competitor}</strong> in <strong>{keyword}</strong>
+                  </p>
+                  <Button 
                 onClick={generateQueries} 
                 disabled={loading}
                 className="flex items-center gap-2"
@@ -413,7 +466,9 @@ export const ImprovedBrandTracker: React.FC = () => {
                     Generate AI Queries
                   </>
                 )}
-              </Button>
+                  </Button>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>

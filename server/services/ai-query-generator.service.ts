@@ -293,7 +293,12 @@ Generate exactly ${count} high-quality, diverse queries:`;
     try {
       logger.info('[AIQueryGenerator] Starting OpenAI query generation');
 
-      const response = await this.openai.chat.completions.create({
+      // Add timeout wrapper
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('OpenAI API timeout')), 14000)
+      );
+
+      const apiPromise = this.openai.chat.completions.create({
         model: 'gpt-3.5-turbo', // Faster model to reduce timeout risk
         messages: [
           {
@@ -309,6 +314,9 @@ Generate exactly ${count} high-quality, diverse queries:`;
         max_tokens: 2000, // Reduced to speed up response
         response_format: { type: 'json_object' }
       });
+
+      // Race between API call and timeout
+      const response = await Promise.race([apiPromise, timeoutPromise]) as any;
 
       logger.info('[AIQueryGenerator] OpenAI response received');
 
